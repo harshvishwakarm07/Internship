@@ -1,16 +1,23 @@
 import React, { createContext, useContext, useMemo, useState } from 'react';
-import axios from 'axios';
+import api, { getStoredUser } from '../services/api';
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(JSON.parse(localStorage.getItem('user')) || null);
+  const [user, setUser] = useState(getStoredUser);
   const [loading, setLoading] = useState(false);
+
+  const resolveHome = (authUser) => {
+    if (!authUser) return '/login';
+    if (authUser.role === 'admin') return '/admin';
+    if (authUser.role === 'faculty') return '/faculty';
+    return '/student';
+  };
 
   const login = async (email, password) => {
     setLoading(true);
     try {
-      const { data } = await axios.post('http://localhost:5000/api/auth/login', { email, password });
+      const { data } = await api.post('/auth/login', { email, password });
       setUser(data);
       localStorage.setItem('user', JSON.stringify(data));
       return data;
@@ -21,12 +28,26 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const register = async (payload) => {
+    setLoading(true);
+    try {
+      const { data } = await api.post('/auth/register', payload);
+      setUser(data);
+      localStorage.setItem('user', JSON.stringify(data));
+      return data;
+    } catch (error) {
+      throw error?.response?.data?.message || 'Registration failed';
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const logout = () => {
     setUser(null);
     localStorage.removeItem('user');
   };
 
-  const value = useMemo(() => ({ user, loading, login, logout }), [user, loading]);
+  const value = useMemo(() => ({ user, loading, login, register, logout, resolveHome }), [user, loading]);
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 

@@ -13,6 +13,10 @@ const protect = asyncHandler(async (req, res, next) => {
         res.status(401);
         throw new Error('Not authorized, user not found');
       }
+      if (!req.user.isActive) {
+        res.status(403);
+        throw new Error('Account is inactive');
+      }
       next();
     } catch (error) {
       res.status(401);
@@ -35,4 +39,7 @@ const authorize = (...roles) => {
   };
 };
 
-module.exports = { protect, authorize };
+const verifyToken = protect;
+const authorizeRoles = authorize;
+
+module.exports = { protect, authorize, verifyToken, authorizeRoles };

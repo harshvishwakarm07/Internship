@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="SITS">
+  <rect width="64" height="64" rx="12" fill="#0f172a"/>
+  <path d="M14 42c0-6 4-10 10-10h16v-4H14v-6h36v16H24c-2.2 0-4 1.8-4 4s1.8 4 4 4h26v6H24c-6 0-10-4-10-10z" fill="#38bdf8"/>
+</svg>

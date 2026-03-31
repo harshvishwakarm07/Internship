@@ -87,7 +87,7 @@ PrintResult 'Student add internship with offer letter' (![string]::IsNullOrEmpty
 
 # Invalid file type
 $badUpload = curl.exe -s -o NUL -w "%{http_code}" -X POST "$base/internships" -H "Authorization: Bearer $studentToken" -F "companyName=Bad Corp" -F "role=Intern" -F "startDate=2026-03-01" -F "endDate=2026-09-01" -F "offerLetter=@d:/InternShip/backend/uploads/qa_test_invalid.txt"
-PrintResult 'Invalid file type rejected' ($badUpload -eq '500') "status=$badUpload (expected validation error)"
+PrintResult 'Invalid file type rejected' ($badUpload -eq '415') "status=$badUpload"
 
 # Missing required field internship
 $missingUpload = curl.exe -s -o NUL -w "%{http_code}" -X POST "$base/internships" -H "Authorization: Bearer $studentToken" -F "role=Intern" -F "startDate=2026-03-01" -F "endDate=2026-09-01"

@@ -1,6 +1,9 @@
 const asyncHandler = require('express-async-handler');
+const mongoose = require('mongoose');
 const User = require('../models/User');
 const Internship = require('../models/Internship');
+const StudentProfile = require('../models/StudentProfile');
+const { createAuditLog } = require('../utils/audit');
 
 // @desc    Get all users (Admin only)
 // @route   GET /api/admin/users
@@ -15,11 +18,29 @@ const getAllUsers = asyncHandler(async (req, res) => {
 // @access  Private (Admin)
 const assignMentor = asyncHandler(async (req, res) => {
   const { facultyId } = req.body;
+  if (!facultyId || !mongoose.Types.ObjectId.isValid(facultyId)) {
+    res.status(400);
+    throw new Error('Invalid facultyId');
+  }
+
+  const faculty = await User.findById(facultyId);
+  if (!faculty || faculty.role !== 'faculty') {
+    res.status(404);
+    throw new Error('Faculty not found');
+  }
+
   const user = await User.findById(req.params.studentId);
   
   if (user && user.role === 'student') {
     // Logic for assigning (this depends on the schema choice, but a common pattern is to update the internship)
-    const internships = await Internship.updateMany({ student: user._id }, { mentor: facultyId });
+    const internships = await Internship.updateMany({ student: user._id }, { mentor: faculty._id });
+    await createAuditLog({
+      req,
+      action: 'MENTOR_ASSIGN',
+      entityType: 'User',
+      entityId: user._id,
+      metadata: { facultyId: faculty._id, internshipCount: internships.modifiedCount },
+    });
     res.json({ message: 'Mentor assigned to all student internships', count: internships.modifiedCount });
   } else {
     res.status(404);
@@ -68,6 +89,16 @@ const createUser = asyncHandler(async (req, res) => {
   }
 
   const user = await User.create({ name, email, password, role });
+  if (role === 'student') {
+    await StudentProfile.create({ user: user._id });
+  }
+  await createAuditLog({
+    req,
+    action: 'USER_CREATE',
+    entityType: 'User',
+    entityId: user._id,
+    metadata: { email: user.email, role: user.role },
+  });
   res.status(201).json({ _id: user._id, name: user.name, email: user.email, role: user.role });
 });
 
@@ -97,6 +128,13 @@ const updateUser = asyncHandler(async (req, res) => {
   if (password) user.password = password;
 
   const updated = await user.save();
+  await createAuditLog({
+    req,
+    action: 'USER_UPDATE',
+    entityType: 'User',
+    entityId: updated._id,
+    metadata: { email: updated.email, role: updated.role },
+  });
   res.json({ _id: updated._id, name: updated.name, email: updated.email, role: updated.role });
 });
 
@@ -104,6 +142,11 @@ const updateUser = asyncHandler(async (req, res) => {
 // @route   DELETE /api/admin/users/:id
 // @access  Private (Admin)
 const deleteUser = asyncHandler(async (req, res) => {
+  if (req.params.id === req.user._id.toString()) {
+    res.status(400);
+    throw new Error('Admin cannot delete own account');
+  }
+
   const user = await User.findById(req.params.id);
   if (!user) {
     res.status(404);
@@ -111,6 +154,13 @@ const deleteUser = asyncHandler(async (req, res) => {
   }
 
   await user.deleteOne();
+  await createAuditLog({
+    req,
+    action: 'USER_DELETE',
+    entityType: 'User',
+    entityId: user._id,
+    metadata: { email: user.email, role: user.role },
+  });
   res.json({ message: 'User deleted successfully' });
 });
 
