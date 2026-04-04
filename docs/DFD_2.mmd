@@ -1,0 +1,32 @@
+flowchart TB
+    S[Student]
+    F[Faculty]
+    A[Admin]
+
+    P21((2.1 Submit Internship))
+    P22((2.2 Validate Internship Data))
+    P23((2.3 Store Internship + Documents))
+    P24((2.4 Review Internship))
+    P25((2.5 Update Status Workflow))
+    P26((2.6 Publish Status & Notify))
+
+    D3[(D3 Internship)]
+    D6[(D6 AuditLog)]
+
+    S -->|company, role, dates, offer letter| P21
+    P21 --> P22
+    P22 -->|valid| P23
+    P22 -->|invalid error| S
+
+    P23 --> D3
+    P23 --> D6
+
+    F -->|approve/reject + reason| P24
+    A -->|approve/reject + reason optional| P24
+    P24 --> P25
+
+    P25 -->|Pending -> Approved/Rejected| D3
+    P25 --> D6
+    P25 --> P26
+
+    P26 -->|status update + feedback| S

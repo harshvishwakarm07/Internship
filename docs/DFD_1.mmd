@@ -1,0 +1,54 @@
+flowchart TB
+    S[Student]
+    F[Faculty]
+    A[Admin]
+
+    P1((1.0 Authentication & RBAC))
+    P2((2.0 Internship Management))
+    P3((3.0 Report & Feedback Management))
+    P4((4.0 Admin & Mentor Management))
+    P5((5.0 Notifications & Dashboard Analytics))
+
+    D1[(D1 User)]
+    D2[(D2 StudentProfile)]
+    D3[(D3 Internship)]
+    D4[(D4 Report)]
+    D5[(D5 Feedback)]
+    D6[(D6 AuditLog)]
+
+    S -->|register/login data| P1
+    F -->|login data| P1
+    A -->|login data| P1
+    P1 <--> D1
+    P1 -->|auth token + role| S
+    P1 -->|auth token + role| F
+    P1 -->|auth token + role| A
+
+    S -->|internship form + offer letter + certificate| P2
+    F -->|approve/reject action| P2
+    A -->|status override optional| P2
+    P2 <--> D3
+    P2 -->|status updates| S
+    P2 --> D6
+
+    S -->|weekly report + attachment| P3
+    F -->|report feedback + review| P3
+    P3 <--> D4
+    P3 <--> D5
+    P3 -->|feedback/review status| S
+    P3 --> D6
+
+    A -->|user CRUD + mentor assignment| P4
+    P4 <--> D1
+    P4 <--> D2
+    P4 <--> D3
+    P4 --> D6
+
+    P5 <--> D1
+    P5 <--> D3
+    P5 <--> D4
+    P5 <--> D5
+    P5 <--> D6
+    P5 -->|dashboard metrics + alerts| A
+    P5 -->|review queue + alerts| F
+    P5 -->|status alerts| S

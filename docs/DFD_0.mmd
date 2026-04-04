@@ -1,0 +1,19 @@
+flowchart LR
+    S[Student]
+    F[Faculty/Mentor]
+    A[Admin]
+    C[Company optional]
+
+    SYS((SITS System))
+
+    S -->|Register/Login, Internship Data, Reports, Files| SYS
+    SYS -->|Status, Feedback, Dashboard Data| S
+
+    F -->|Review Actions, Feedback, Approval/Rejection| SYS
+    SYS -->|Assigned Students, Internship/Report Data| F
+
+    A -->|User Management, Mentor Assignment, Admin Actions| SYS
+    SYS -->|Analytics, User Lists, Audit View| A
+
+    C -->|Offer/Certificate Confirmation optional| SYS
+    SYS -->|Verification Requests optional| C
