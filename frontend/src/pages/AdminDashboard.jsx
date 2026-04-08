@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import api from '../services/api';
+import api, { notifyToast } from '../services/api';
 import AnimatedPage from '../components/common/AnimatedPage';
 import { AdminOverviewCharts } from '../components/dashboard/AnalyticsCharts';
 
@@ -20,6 +20,7 @@ export default function AdminDashboard() {
   const [assigning, setAssigning] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const load = async () => {
@@ -33,6 +34,8 @@ export default function AdminDashboard() {
         setUsers(usersResponse.data);
       } catch (err) {
         setError(err?.response?.data?.message || 'Failed to load admin stats.');
+      } finally {
+        setIsLoading(false);
       }
     };
     load();
@@ -49,7 +52,13 @@ export default function AdminDashboard() {
     <AnimatedPage className="space-y-6">
       <h2 className="text-2xl font-semibold mb-4">Admin Dashboard</h2>
       {error && <p className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>}
-      {stats ? (
+      {isLoading ? (
+        <div className="grid max-w-2xl grid-cols-1 gap-4 md:grid-cols-2">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <div key={index} className="h-24 animate-pulse rounded border bg-slate-100 dark:border-slate-700 dark:bg-slate-800" />
+          ))}
+        </div>
+      ) : stats ? (
         <div className="grid max-w-2xl grid-cols-1 gap-4 md:grid-cols-2">
           <Stat label="Total Users" value={stats.totalUsers} />
           <Stat label="Students" value={stats.students} />
@@ -75,6 +84,7 @@ export default function AdminDashboard() {
                 const { data } = await api.post('/admin/users', userForm);
                 setUsers((current) => [data, ...current]);
                 setUserForm(initialUserForm);
+                notifyToast('User created successfully.', 'success');
               } catch (err) {
                 setError(err?.response?.data?.message || 'Failed to create user.');
               } finally {
@@ -122,6 +132,7 @@ export default function AdminDashboard() {
                 setError('');
                 try {
                   await api.put(`/admin/assign-mentor/${assignData.studentId}`, { facultyId: assignData.facultyId });
+                  notifyToast('Mentor assigned successfully.', 'success');
                 } catch (err) {
                   setError(err?.response?.data?.message || 'Failed to assign mentor.');
                 } finally {
@@ -179,6 +190,7 @@ export default function AdminDashboard() {
                         try {
                           await api.delete(`/admin/users/${user._id}`);
                           setUsers((current) => current.filter((item) => item._id !== user._id));
+                          notifyToast('User deleted successfully.', 'success');
                         } catch (err) {
                           setError(err?.response?.data?.message || 'Failed to delete user.');
                         }

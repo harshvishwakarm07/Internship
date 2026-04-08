@@ -29,21 +29,24 @@ export default function Login() {
 
   return (
     <AnimatedPage className="w-full max-w-md">
-    <div className="elevated-card w-full rounded-2xl p-6">
-      <h2 className="text-xl font-semibold mb-1">Login</h2>
-      <p className="mb-4 text-sm text-slate-500">Sign in to continue to SITS</p>
+    <div className="elevated-card w-full rounded-3xl p-7">
+      <div className="mb-5">
+        <p className="text-xs uppercase tracking-[0.22em] text-cyan-600 dark:text-cyan-300">Secure Access</p>
+        <h2 className="mb-1 text-2xl font-semibold text-slate-900 dark:text-slate-100">Welcome Back</h2>
+        <p className="text-sm text-slate-600 dark:text-slate-300">Sign in to continue to SITS control center</p>
+      </div>
       <form onSubmit={onSubmit} className="space-y-3">
-        <input className="w-full border rounded p-2" type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-        <input className="w-full border rounded p-2" type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+        <input className="field-control" type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+        <input className="field-control" type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required />
         {error && <p className="text-sm text-red-600">{error}</p>}
-        <button disabled={loading} className="inline-flex w-full items-center justify-center gap-2 rounded bg-blue-600 p-2 text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300" type="submit">
+        <button disabled={loading} className="neon-button inline-flex w-full items-center justify-center gap-2 rounded-xl p-2.5 font-medium disabled:cursor-not-allowed disabled:bg-blue-300" type="submit">
           {loading ? 'Logging in...' : 'Login'}
           {!loading && <ArrowRight size={16} />}
         </button>
       </form>
-      <p className="mt-4 text-sm text-slate-600">
+      <p className="mt-4 text-sm text-slate-600 dark:text-slate-300">
         Need an account?{' '}
-        <Link to="/register" className="font-medium text-blue-600 hover:text-blue-800">Register</Link>
+        <Link to="/register" className="font-medium text-cyan-700 hover:text-cyan-900 dark:text-cyan-300 dark:hover:text-cyan-200">Register</Link>
       </p>
     </div>
     </AnimatedPage>

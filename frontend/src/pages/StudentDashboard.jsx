@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import api from '../services/api';
+import { Link } from 'react-router-dom';
+import api, { getAssetUrl, notifyToast } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import AnimatedPage from '../components/common/AnimatedPage';
 
@@ -67,6 +68,7 @@ export default function StudentDashboard() {
       setFormData(initialFormData);
       setFile(null);
       setSuccessMessage('Internship submitted successfully.');
+      notifyToast('Internship submitted successfully.', 'success');
     } catch (err) {
       setError(err?.response?.data?.message || 'Submission failed.');
     } finally {
@@ -119,6 +121,7 @@ export default function StudentDashboard() {
       setReportForm({ weekNumber: '', content: '' });
       setReportFile(null);
       setSuccessMessage('Report submitted successfully.');
+      notifyToast('Weekly report submitted.', 'success');
       await loadReports(selectedInternshipId);
     } catch (err) {
       setError(err?.response?.data?.message || 'Report submission failed.');
@@ -149,6 +152,7 @@ export default function StudentDashboard() {
       setInternships((current) => current.map((item) => (item._id === updated._id ? updated : item)));
       setCertificateFile(null);
       setSuccessMessage('Certificate uploaded successfully.');
+      notifyToast('Certificate uploaded successfully.', 'success');
     } catch (err) {
       setError(err?.response?.data?.message || 'Certificate upload failed.');
     } finally {
@@ -167,21 +171,37 @@ export default function StudentDashboard() {
     <AnimatedPage className="mx-auto max-w-6xl">
     <div className="space-y-6">
       <h1 className="text-3xl font-bold mb-8">Welcome, {user.name}</h1>
+
+      <div className="grid gap-3 sm:grid-cols-3">
+        <Link to="/student/add-internship" className="elevated-card rounded-xl p-4 text-sm text-slate-700 transition hover:-translate-y-0.5 hover:shadow-md dark:text-slate-200">
+          <p className="font-semibold">1. Add Internship</p>
+          <p className="mt-1 text-xs text-slate-500 dark:text-slate-300">Submit offer details and upload your letter.</p>
+        </Link>
+        <Link to="/student/reports" className="elevated-card rounded-xl p-4 text-sm text-slate-700 transition hover:-translate-y-0.5 hover:shadow-md dark:text-slate-200">
+          <p className="font-semibold">2. Submit Reports</p>
+          <p className="mt-1 text-xs text-slate-500 dark:text-slate-300">Track weekly work updates and faculty feedback.</p>
+        </Link>
+        <Link to="/student/profile" className="elevated-card rounded-xl p-4 text-sm text-slate-700 transition hover:-translate-y-0.5 hover:shadow-md dark:text-slate-200">
+          <p className="font-semibold">3. Complete Profile</p>
+          <p className="mt-1 text-xs text-slate-500 dark:text-slate-300">Keep your academic and contact details current.</p>
+        </Link>
+      </div>
+
       {error && <p className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>}
       {successMessage && <p className="mb-4 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">{successMessage}</p>}
       
       {/* FORM SECTION */}
       <div className="elevated-card rounded-2xl p-6">
-        <h2 className="text-xl font-semibold mb-4">Add Internship Details</h2>
+        <h2 className="mb-4 text-xl font-semibold text-slate-900 dark:text-slate-100">Add Internship Details</h2>
         <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <input type="text" placeholder="Company Name" value={formData.companyName} className="p-3 border rounded-lg focus:ring-2 focus:ring-blue-500" onChange={updateField('companyName')} />
-          <input type="text" placeholder="Role/Position" value={formData.role} className="p-3 border rounded-lg focus:ring-2 focus:ring-blue-500" onChange={updateField('role')} />
-          <input type="date" value={formData.startDate} className="p-3 border rounded-lg focus:ring-2 focus:ring-blue-500" onChange={updateField('startDate')} />
-          <input type="date" value={formData.endDate} className="p-3 border rounded-lg focus:ring-2 focus:ring-blue-500" onChange={updateField('endDate')} />
+          <input type="text" placeholder="Company Name" value={formData.companyName} className="field-control" onChange={updateField('companyName')} />
+          <input type="text" placeholder="Role/Position" value={formData.role} className="field-control" onChange={updateField('role')} />
+          <input type="date" value={formData.startDate} className="field-control" onChange={updateField('startDate')} />
+          <input type="date" value={formData.endDate} className="field-control" onChange={updateField('endDate')} />
           
           <div className="md:col-span-2">
-            <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-slate-200">Upload Offer Letter (Local)</label>
-            <input type="file" className="block w-full text-sm text-slate-500 dark:text-slate-300 file:mr-4 file:rounded-full file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-blue-700 hover:file:bg-blue-100" onChange={(e) => setFile(e.target.files[0])} />
+            <label className="field-label">Upload Offer Letter (Local)</label>
+            <input type="file" className="file-control block file:mr-4 file:rounded-full file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-blue-700 hover:file:bg-blue-100" onChange={(e) => setFile(e.target.files[0])} />
           </div>
 
           <button disabled={isSubmitting} type="submit" className="md:col-span-2 bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300 transition duration-200">
@@ -218,12 +238,22 @@ export default function StudentDashboard() {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200 bg-white dark:divide-slate-700 dark:bg-slate-900/60">
-            {!isLoading && internships.length === 0 && (
+            {!isLoading && filteredInternships.length === 0 && (
               <tr>
-                <td colSpan="4" className="px-6 py-8 text-center text-sm text-slate-500">No internships submitted yet.</td>
+                <td colSpan="4" className="px-6 py-8 text-center text-sm text-slate-500">
+                  {internships.length === 0 ? 'No internships submitted yet.' : 'No internships match your filters.'}
+                </td>
               </tr>
             )}
-            {filteredInternships.map((i) => (
+            {isLoading && Array.from({ length: 3 }).map((_, index) => (
+              <tr key={`loading-${index}`} className="animate-pulse">
+                <td className="px-6 py-4"><div className="h-4 w-36 rounded bg-slate-200 dark:bg-slate-700" /></td>
+                <td className="px-6 py-4"><div className="h-4 w-28 rounded bg-slate-200 dark:bg-slate-700" /></td>
+                <td className="px-6 py-4"><div className="h-5 w-20 rounded-full bg-slate-200 dark:bg-slate-700" /></td>
+                <td className="px-6 py-4"><div className="ml-auto h-4 w-20 rounded bg-slate-200 dark:bg-slate-700" /></td>
+              </tr>
+            ))}
+            {!isLoading && filteredInternships.map((i) => (
               <motion.tr key={i._id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }}>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-slate-100">{i.companyName}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-slate-300">{i.role}</td>
@@ -234,8 +264,8 @@ export default function StudentDashboard() {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <div className="flex justify-end gap-3">
-                    {i.offerLetter && <a href={`http://localhost:5000${i.offerLetter}`} target="_blank" rel="noreferrer" className="text-blue-600 hover:text-blue-900">Offer</a>}
-                    {i.certificate && <a href={`http://localhost:5000${i.certificate}`} target="_blank" rel="noreferrer" className="text-emerald-600 hover:text-emerald-800">Certificate</a>}
+                    {i.offerLetter && <a href={getAssetUrl(i.offerLetter)} target="_blank" rel="noreferrer" className="text-blue-600 hover:text-blue-900">Offer</a>}
+                    {i.certificate && <a href={getAssetUrl(i.certificate)} target="_blank" rel="noreferrer" className="text-emerald-600 hover:text-emerald-800">Certificate</a>}
                   </div>
                 </td>
               </motion.tr>
@@ -247,8 +277,8 @@ export default function StudentDashboard() {
 
       <div className="mt-8 grid gap-6 lg:grid-cols-2">
         <div className="elevated-card rounded-2xl p-5">
-          <h3 className="mb-3 text-lg font-semibold">Weekly Reports</h3>
-          <select className="mb-3 w-full rounded border p-2" value={selectedInternshipId} onChange={onInternshipChange}>
+          <h3 className="mb-3 text-lg font-semibold text-slate-900 dark:text-slate-100">Weekly Reports</h3>
+          <select className="field-control mb-3" value={selectedInternshipId} onChange={onInternshipChange}>
             <option value="">Select internship</option>
             {internships.map((item) => (
               <option key={item._id} value={item._id}>{item.companyName} - {item.role}</option>
@@ -258,7 +288,7 @@ export default function StudentDashboard() {
           <form className="space-y-3" onSubmit={submitReport}>
             <input className="w-full rounded border p-2 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" type="number" min="1" placeholder="Week number" value={reportForm.weekNumber} onChange={(e) => setReportForm((current) => ({ ...current, weekNumber: e.target.value }))} required />
             <textarea className="w-full rounded border p-2 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" rows="4" placeholder="Report content" value={reportForm.content} onChange={(e) => setReportForm((current) => ({ ...current, content: e.target.value }))} required />
-            <input type="file" onChange={(e) => setReportFile(e.target.files?.[0] || null)} className="w-full text-sm text-slate-600" required />
+            <input type="file" onChange={(e) => setReportFile(e.target.files?.[0] || null)} className="file-control" required />
             <button disabled={isReportSubmitting} className="w-full rounded bg-indigo-600 p-2 font-medium text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-indigo-300" type="submit">
               {isReportSubmitting ? 'Submitting report...' : 'Submit report'}
             </button>
@@ -267,9 +297,9 @@ export default function StudentDashboard() {
           <div className="mt-4 space-y-2">
             {reports.length === 0 && <p className="text-sm text-slate-500">No reports found for selected internship.</p>}
             {reports.map((report) => (
-              <div key={report._id} className="rounded border p-3">
-                <p className="text-sm font-medium">Week {report.weekNumber} • {report.status}</p>
-                <p className="text-sm text-slate-600">{report.content}</p>
+              <div key={report._id} className="rounded border p-3 dark:border-slate-700 dark:bg-slate-900/60">
+                <p className="text-sm font-medium text-slate-800 dark:text-slate-100">Week {report.weekNumber} • {report.status}</p>
+                <p className="text-sm text-slate-600 dark:text-slate-300">{report.content}</p>
                 {report.feedback && <p className="mt-1 text-xs text-emerald-700">Feedback: {report.feedback}</p>}
               </div>
             ))}
@@ -277,7 +307,7 @@ export default function StudentDashboard() {
         </div>
 
         <div className="elevated-card rounded-2xl p-5">
-          <h3 className="mb-3 text-lg font-semibold">Upload Completion Certificate</h3>
+          <h3 className="mb-3 text-lg font-semibold text-slate-900 dark:text-slate-100">Upload Completion Certificate</h3>
           <p className="mb-3 text-sm text-slate-500">Choose internship and upload certificate (PDF/JPG/PNG).</p>
           <select className="mb-3 w-full rounded border p-2 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" value={selectedInternshipId} onChange={(e) => setSelectedInternshipId(e.target.value)}>
             <option value="">Select internship</option>
@@ -285,7 +315,7 @@ export default function StudentDashboard() {
               <option key={item._id} value={item._id}>{item.companyName} - {item.role}</option>
             ))}
           </select>
-          <input className="mb-3 w-full text-sm text-slate-600" type="file" onChange={(e) => setCertificateFile(e.target.files?.[0] || null)} />
+          <input className="file-control mb-3" type="file" onChange={(e) => setCertificateFile(e.target.files?.[0] || null)} />
           <button disabled={isCertUploading} onClick={uploadCertificate} className="w-full rounded bg-emerald-600 p-2 font-medium text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-emerald-300" type="button">
             {isCertUploading ? 'Uploading...' : 'Upload certificate'}
           </button>

@@ -1,34 +1,44 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
-import Login from '../pages/Login';
-import Register from '../pages/Register';
-import StudentDashboard from '../pages/StudentDashboard';
-import FacultyDashboard from '../pages/FacultyDashboard';
-import AdminDashboard from '../pages/AdminDashboard';
-import Unauthorized from '../pages/Unauthorized';
-import NotFound from '../pages/NotFound';
-import AddInternship from '../pages/AddInternship';
-import ReportsPage from '../pages/ReportsPage';
-import ProfilePage from '../pages/ProfilePage';
 import { ProtectedRoute, PublicOnlyRoute } from './ProtectedRoute';
+import { useAuth } from '../context/AuthContext';
+import RouteLoader from '../components/common/RouteLoader';
+
+const Login = lazy(() => import('../pages/Login'));
+const Register = lazy(() => import('../pages/Register'));
+const StudentDashboard = lazy(() => import('../pages/StudentDashboard'));
+const FacultyDashboard = lazy(() => import('../pages/FacultyDashboard'));
+const AdminDashboard = lazy(() => import('../pages/AdminDashboard'));
+const Unauthorized = lazy(() => import('../pages/Unauthorized'));
+const NotFound = lazy(() => import('../pages/NotFound'));
+const AddInternship = lazy(() => import('../pages/AddInternship'));
+const ReportsPage = lazy(() => import('../pages/ReportsPage'));
+const ProfilePage = lazy(() => import('../pages/ProfilePage'));
+
+function RoleHomeRoute() {
+  const { user, resolveHome } = useAuth();
+  return <Navigate to={resolveHome(user)} replace />;
+}
 
 export default function AppRoutes() {
   return (
-    <Routes>
-      <Route path="/" element={<Navigate to="/login" replace />} />
-      <Route path="/login" element={<PublicOnlyRoute><Login /></PublicOnlyRoute>} />
-      <Route path="/register" element={<PublicOnlyRoute><Register /></PublicOnlyRoute>} />
-      <Route path="/unauthorized" element={<Unauthorized />} />
+    <Suspense fallback={<RouteLoader />}>
+      <Routes>
+        <Route path="/" element={<RoleHomeRoute />} />
+        <Route path="/login" element={<PublicOnlyRoute><Login /></PublicOnlyRoute>} />
+        <Route path="/register" element={<PublicOnlyRoute><Register /></PublicOnlyRoute>} />
+        <Route path="/unauthorized" element={<Unauthorized />} />
 
-      <Route path="/student" element={<ProtectedRoute allowedRoles={['student']}><StudentDashboard /></ProtectedRoute>} />
-      <Route path="/student/add-internship" element={<ProtectedRoute allowedRoles={['student']}><AddInternship /></ProtectedRoute>} />
-      <Route path="/student/reports" element={<ProtectedRoute allowedRoles={['student']}><ReportsPage /></ProtectedRoute>} />
-      <Route path="/student/profile" element={<ProtectedRoute allowedRoles={['student']}><ProfilePage /></ProtectedRoute>} />
+        <Route path="/student" element={<ProtectedRoute allowedRoles={['student']}><StudentDashboard /></ProtectedRoute>} />
+        <Route path="/student/add-internship" element={<ProtectedRoute allowedRoles={['student']}><AddInternship /></ProtectedRoute>} />
+        <Route path="/student/reports" element={<ProtectedRoute allowedRoles={['student']}><ReportsPage /></ProtectedRoute>} />
+        <Route path="/student/profile" element={<ProtectedRoute allowedRoles={['student']}><ProfilePage /></ProtectedRoute>} />
 
-      <Route path="/faculty" element={<ProtectedRoute allowedRoles={['faculty']}><FacultyDashboard /></ProtectedRoute>} />
-      <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}><AdminDashboard /></ProtectedRoute>} />
+        <Route path="/faculty" element={<ProtectedRoute allowedRoles={['faculty']}><FacultyDashboard /></ProtectedRoute>} />
+        <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}><AdminDashboard /></ProtectedRoute>} />
 
-      <Route path="*" element={<NotFound />} />
-    </Routes>
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </Suspense>
   );
 }

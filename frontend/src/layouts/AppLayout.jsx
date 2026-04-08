@@ -8,8 +8,8 @@ export default function AppLayout({ children }) {
 
   if (!user) {
     return (
-      <div className="min-h-screen px-4 py-12">
-        <div className="mx-auto flex min-h-[74vh] w-full max-w-5xl items-center justify-center rounded-3xl bg-gradient-to-br from-white/90 via-white to-slate-100/90 p-6 backdrop-blur-sm ring-1 ring-slate-200 md:p-12 dark:from-slate-900/90 dark:via-slate-900 dark:to-slate-800/90 dark:ring-slate-700">
+      <div className="futuristic-shell min-h-screen px-4 py-8 md:py-12">
+        <div className="mx-auto flex min-h-[80vh] w-full max-w-5xl items-center justify-center rounded-[2rem] border border-white/40 bg-white/55 p-6 shadow-[0_30px_80px_-40px_rgba(2,6,23,0.65)] backdrop-blur-xl md:p-12 dark:border-slate-700/80 dark:bg-slate-900/55">
           {children}
         </div>
       </div>
@@ -17,11 +17,13 @@ export default function AppLayout({ children }) {
   }
 
   return (
-    <div className="flex min-h-screen bg-slate-50 dark:bg-slate-950">
+    <div className="futuristic-shell flex min-h-screen">
       <Sidebar />
       <div className="flex min-w-0 flex-1 flex-col">
         <Navbar />
-        <main className="flex-1 p-6">{children}</main>
+        <main className="flex-1 p-4 md:p-6">
+          <div className="mx-auto w-full max-w-7xl">{children}</div>
+        </main>
       </div>
     </div>
   );

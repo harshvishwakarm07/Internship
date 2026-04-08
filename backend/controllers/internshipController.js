@@ -57,7 +57,10 @@ const getMyInternships = asyncHandler(async (req, res) => {
 // @route   GET /api/internships/all
 // @access  Private
 const getAllInternships = asyncHandler(async (req, res) => {
-  const internships = await Internship.find({}).populate('student', 'name email');
+  const filter = req.user.role === 'faculty'
+    ? { mentor: req.user._id }
+    : {};
+  const internships = await Internship.find(filter).populate('student', 'name email');
   res.json(internships);
 });
 

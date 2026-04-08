@@ -93,6 +93,49 @@ describe('RBAC integration', () => {
       .expect(200);
   });
 
+  test('unassigned faculty cannot view or review reports of another faculty-assigned student', async () => {
+    const student = await registerAndLogin('student', `s${Date.now()}`);
+    const assignedFaculty = await registerAndLogin('faculty', `f1${Date.now()}`);
+    const otherFaculty = await registerAndLogin('faculty', `f2${Date.now()}`);
+    const admin = await registerAndLogin('admin', `a${Date.now()}`);
+
+    const internshipRes = await request(app)
+      .post('/api/internships')
+      .set('Authorization', `Bearer ${student.token}`)
+      .field('companyName', 'Mentor Check Corp')
+      .field('role', 'Intern')
+      .field('startDate', '2026-01-01')
+      .field('endDate', '2026-06-01')
+      .attach('offerLetter', validUploadPath)
+      .expect(201);
+
+    await request(app)
+      .put(`/api/admin/assign-mentor/${student._id}`)
+      .set('Authorization', `Bearer ${admin.token}`)
+      .send({ facultyId: assignedFaculty._id })
+      .expect(200);
+
+    const reportRes = await request(app)
+      .post('/api/reports')
+      .set('Authorization', `Bearer ${student.token}`)
+      .field('internship', internshipRes.body._id)
+      .field('weekNumber', 1)
+      .field('content', 'Mentor assignment authorization test report.')
+      .attach('attachment', validUploadPath)
+      .expect(201);
+
+    await request(app)
+      .get(`/api/reports/${internshipRes.body._id}`)
+      .set('Authorization', `Bearer ${otherFaculty.token}`)
+      .expect(403);
+
+    await request(app)
+      .put(`/api/reports/${reportRes.body._id}/feedback`)
+      .set('Authorization', `Bearer ${otherFaculty.token}`)
+      .send({ feedback: 'Unauthorized review attempt', status: 'Reviewed' })
+      .expect(403);
+  });
+
   test('validation rejects invalid auth payload', async () => {
     const res = await request(app)
       .post('/api/auth/register')

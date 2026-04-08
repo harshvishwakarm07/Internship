@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import AnimatedPage from '../components/common/AnimatedPage';
-import api from '../services/api';
+import api, { notifyToast } from '../services/api';
 
 export default function ReportsPage() {
   const [internships, setInternships] = useState([]);
@@ -71,6 +71,7 @@ export default function ReportsPage() {
 
       setReportForm({ weekNumber: '', content: '' });
       setAttachment(null);
+      notifyToast('Report submitted successfully.', 'success');
       await loadReports(selectedInternshipId);
     } catch (err) {
       setError(err?.response?.data?.message || 'Failed to submit report.');
@@ -82,18 +83,18 @@ export default function ReportsPage() {
   return (
     <AnimatedPage className="mx-auto grid max-w-6xl gap-6 lg:grid-cols-2">
       <section className="elevated-card rounded-2xl p-5">
-        <h1 className="mb-4 text-xl font-semibold text-slate-800">Submit Weekly Report</h1>
+        <h1 className="mb-4 text-xl font-semibold text-slate-900 dark:text-slate-100">Submit Weekly Report</h1>
         {error && <p className="mb-3 rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
         <form className="space-y-3" onSubmit={onSubmit}>
-          <select className="w-full rounded border p-2" value={selectedInternshipId} onChange={onInternshipChange} required>
+          <select className="field-control" value={selectedInternshipId} onChange={onInternshipChange} required>
             <option value="">Select internship</option>
             {internships.map((internship) => (
               <option key={internship._id} value={internship._id}>{internship.companyName} - {internship.role}</option>
             ))}
           </select>
-          <input className="w-full rounded border p-2" type="number" min="1" placeholder="Week Number" value={reportForm.weekNumber} onChange={(event) => setReportForm((current) => ({ ...current, weekNumber: event.target.value }))} required />
-          <textarea className="w-full rounded border p-2" rows="4" placeholder="Report details" value={reportForm.content} onChange={(event) => setReportForm((current) => ({ ...current, content: event.target.value }))} required />
-          <input className="w-full text-sm" type="file" onChange={(event) => setAttachment(event.target.files?.[0] || null)} required />
+          <input className="field-control" type="number" min="1" placeholder="Week Number" value={reportForm.weekNumber} onChange={(event) => setReportForm((current) => ({ ...current, weekNumber: event.target.value }))} required />
+          <textarea className="field-control" rows="4" placeholder="Report details" value={reportForm.content} onChange={(event) => setReportForm((current) => ({ ...current, content: event.target.value }))} required />
+          <input className="file-control" type="file" onChange={(event) => setAttachment(event.target.files?.[0] || null)} required />
           <button className="w-full rounded bg-indigo-600 py-2 font-medium text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-indigo-300" disabled={isSubmitting} type="submit">
             {isSubmitting ? 'Submitting...' : 'Submit Report'}
           </button>
@@ -101,13 +102,13 @@ export default function ReportsPage() {
       </section>
 
       <section className="elevated-card rounded-2xl p-5">
-        <h2 className="mb-4 text-xl font-semibold text-slate-800">Report History</h2>
+        <h2 className="mb-4 text-xl font-semibold text-slate-900 dark:text-slate-100">Report History</h2>
         <div className="space-y-3">
-          {reports.length === 0 && <p className="text-sm text-slate-500">No reports found for selected internship.</p>}
+          {reports.length === 0 && <p className="text-sm text-slate-500 dark:text-slate-300">No reports found for selected internship.</p>}
           {reports.map((report) => (
-            <article key={report._id} className="rounded border p-3">
-              <p className="text-sm font-semibold text-slate-800">Week {report.weekNumber} - {report.status}</p>
-              <p className="text-sm text-slate-600">{report.content}</p>
+            <article key={report._id} className="rounded border p-3 dark:border-slate-700 dark:bg-slate-900/60">
+              <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">Week {report.weekNumber} - {report.status}</p>
+              <p className="text-sm text-slate-600 dark:text-slate-300">{report.content}</p>
               {report.feedback && <p className="mt-1 text-xs text-emerald-700">Feedback: {report.feedback}</p>}
             </article>
           ))}

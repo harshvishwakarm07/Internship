@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useMemo, useState } from 'react';
-import api, { getStoredUser } from '../services/api';
+import api, { getStoredUser, notifyToast } from '../services/api';
 
 const AuthContext = createContext(null);
 
@@ -20,6 +20,7 @@ export const AuthProvider = ({ children }) => {
       const { data } = await api.post('/auth/login', { email, password });
       setUser(data);
       localStorage.setItem('user', JSON.stringify(data));
+      notifyToast(`Welcome back, ${data.name}.`, 'success');
       return data;
     } catch (error) {
       throw error?.response?.data?.message || 'Login failed';
@@ -34,6 +35,7 @@ export const AuthProvider = ({ children }) => {
       const { data } = await api.post('/auth/register', payload);
       setUser(data);
       localStorage.setItem('user', JSON.stringify(data));
+      notifyToast(`Account created for ${data.name}.`, 'success');
       return data;
     } catch (error) {
       throw error?.response?.data?.message || 'Registration failed';
@@ -45,6 +47,7 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     setUser(null);
     localStorage.removeItem('user');
+    notifyToast('You have been logged out.', 'info');
   };
 
   const value = useMemo(() => ({ user, loading, login, register, logout, resolveHome }), [user, loading]);

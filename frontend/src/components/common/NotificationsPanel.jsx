@@ -10,7 +10,7 @@ export default function NotificationsPanel() {
     <div className="relative">
       <button
         onClick={() => setOpen((current) => !current)}
-        className="relative inline-flex h-9 w-9 items-center justify-center rounded border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
+        className="relative inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-300/70 bg-white/70 text-slate-700 hover:bg-white dark:border-slate-600/80 dark:bg-slate-800/75 dark:text-slate-100 dark:hover:bg-slate-700"
         type="button"
         aria-label="Toggle notifications"
       >
@@ -23,7 +23,7 @@ export default function NotificationsPanel() {
       </button>
 
       {open && (
-        <div className="absolute right-0 z-40 mt-2 w-80 rounded-xl border border-slate-200 bg-white p-3 shadow-lg dark:border-slate-700 dark:bg-slate-900">
+        <div className="absolute right-0 z-40 mt-2 w-80 rounded-2xl border border-slate-200/80 bg-white/85 p-3 shadow-xl backdrop-blur-xl dark:border-slate-700/80 dark:bg-slate-900/85">
           <div className="mb-2 flex items-center justify-between">
             <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">Notifications</p>
             <div className="flex items-center gap-1">

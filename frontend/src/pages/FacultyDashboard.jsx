@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import api from '../services/api';
+import api, { notifyToast } from '../services/api';
 import AnimatedPage from '../components/common/AnimatedPage';
 import { FacultyStatusChart } from '../components/dashboard/AnalyticsCharts';
 
@@ -14,6 +14,8 @@ export default function FacultyDashboard() {
   const [reports, setReports] = useState([]);
   const [feedbackDraft, setFeedbackDraft] = useState({});
   const [feedbackLoadingId, setFeedbackLoadingId] = useState('');
+  const [rejectTarget, setRejectTarget] = useState(null);
+  const [rejectionReason, setRejectionReason] = useState('');
 
   useEffect(() => {
     const load = async () => {
@@ -30,17 +32,44 @@ export default function FacultyDashboard() {
     load();
   }, []);
 
-  const updateStatus = async (id, status) => {
+  const updateStatus = async (id, status, reason = '') => {
     try {
       setPendingId(id);
       setError('');
-      const { data } = await api.put(`/internships/${id}/status`, { status });
+      const payload = status === 'Rejected'
+        ? { status, rejectionReason: reason }
+        : { status };
+      const { data } = await api.put(`/internships/${id}/status`, payload);
       setInternships((prev) => prev.map((i) => (i._id === id ? data : i)));
+      notifyToast(`Internship marked as ${status}.`, 'success');
     } catch (err) {
       setError(err?.response?.data?.message || 'Failed to update internship status.');
     } finally {
       setPendingId('');
     }
+  };
+
+  const openRejectDialog = (internship) => {
+    setError('');
+    setRejectTarget(internship);
+    setRejectionReason('');
+  };
+
+  const closeRejectDialog = () => {
+    setRejectTarget(null);
+    setRejectionReason('');
+  };
+
+  const confirmReject = async () => {
+    const reason = rejectionReason.trim();
+    if (!reason) {
+      setError('Please provide a rejection reason before rejecting the internship.');
+      return;
+    }
+
+    const target = rejectTarget;
+    closeRejectDialog();
+    await updateStatus(target._id, 'Rejected', reason);
   };
 
   const loadReports = async (internshipId) => {
@@ -72,6 +101,7 @@ export default function FacultyDashboard() {
       });
       setReports((current) => current.map((item) => (item._id === reportId ? data : item)));
       setFeedbackDraft((current) => ({ ...current, [reportId]: '' }));
+      notifyToast('Feedback saved successfully.', 'success');
     } catch (err) {
       setError(err?.response?.data?.message || 'Failed to submit feedback.');
     } finally {
@@ -95,7 +125,13 @@ export default function FacultyDashboard() {
     <AnimatedPage className="space-y-6">
       <h2 className="text-2xl font-semibold mb-4">Faculty Dashboard</h2>
       {error && <p className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>}
-      {isLoading && <p className="text-sm text-slate-500 dark:text-slate-300">Loading internships...</p>}
+      {isLoading && (
+        <div className="space-y-2">
+          <div className="h-5 w-52 animate-pulse rounded bg-slate-200 dark:bg-slate-700" />
+          <div className="h-20 animate-pulse rounded-xl bg-slate-200 dark:bg-slate-700" />
+          <div className="h-20 animate-pulse rounded-xl bg-slate-200 dark:bg-slate-700" />
+        </div>
+      )}
 
       <div className="elevated-card grid gap-3 rounded-2xl p-4 md:grid-cols-3">
         <input
@@ -127,11 +163,14 @@ export default function FacultyDashboard() {
             <div>
               <p className="font-medium">{i.companyName} - {i.role}</p>
               <p className="text-sm text-slate-600 dark:text-slate-300">Status: {i.status}</p>
+              <p className="mt-1 inline-flex rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-medium text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-200">
+                Assigned Mentor: You
+              </p>
               {i.student?.name && <p className="text-xs text-slate-500 dark:text-slate-400">Student: {i.student.name} ({i.student.email})</p>}
             </div>
             <div className="space-x-2">
               <button disabled={pendingId === i._id} onClick={() => updateStatus(i._id, 'Approved')} className="px-3 py-1 rounded bg-green-600 text-white disabled:cursor-not-allowed disabled:bg-green-300">Approve</button>
-              <button disabled={pendingId === i._id} onClick={() => updateStatus(i._id, 'Rejected')} className="px-3 py-1 rounded bg-red-600 text-white disabled:cursor-not-allowed disabled:bg-red-300">Reject</button>
+              <button disabled={pendingId === i._id} onClick={() => openRejectDialog(i)} className="px-3 py-1 rounded bg-red-600 text-white disabled:cursor-not-allowed disabled:bg-red-300">Reject</button>
             </div>
           </div>
         ))}
@@ -139,10 +178,13 @@ export default function FacultyDashboard() {
 
       <div className="elevated-card rounded-2xl p-5">
         <h3 className="mb-3 text-lg font-semibold">Review Student Reports</h3>
+        <p className="mb-3 text-sm text-slate-500 dark:text-slate-300">
+          Only internships assigned to you as mentor are listed here.
+        </p>
         <select className="mb-4 w-full rounded border p-2 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100" value={selectedInternshipId} onChange={onSelectInternship}>
           <option value="">Select internship</option>
           {internships.map((item) => (
-            <option key={item._id} value={item._id}>{item.companyName} - {item.role}</option>
+            <option key={item._id} value={item._id}>{item.companyName} - {item.role} (Assigned to you)</option>
           ))}
         </select>
         <div className="space-y-3">
@@ -160,6 +202,32 @@ export default function FacultyDashboard() {
           ))}
         </div>
       </div>
+
+      {rejectTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 px-4">
+          <div className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-5 shadow-xl dark:border-slate-700 dark:bg-slate-900">
+            <h4 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Reject Internship</h4>
+            <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
+              Add a clear reason for rejecting <span className="font-medium">{rejectTarget.companyName} - {rejectTarget.role}</span>.
+            </p>
+            <textarea
+              className="mt-3 w-full rounded border p-2 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+              rows="4"
+              placeholder="Enter rejection reason"
+              value={rejectionReason}
+              onChange={(e) => setRejectionReason(e.target.value)}
+            />
+            <div className="mt-4 flex justify-end gap-2">
+              <button type="button" onClick={closeRejectDialog} className="rounded border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800">
+                Cancel
+              </button>
+              <button type="button" onClick={confirmReject} className="rounded bg-red-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-700">
+                Confirm Reject
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </AnimatedPage>
   );
 }

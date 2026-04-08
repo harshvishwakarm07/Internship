@@ -203,6 +203,75 @@ Cannot:
 
 ---
 
+## Working Flow (Easy Guide)
+
+This section explains how the system works in one continuous flow so new developers, reviewers, and users can quickly understand the project.
+
+### A) First Run Flow (Developer)
+
+1. Start backend server.
+2. Start frontend app.
+3. Open the frontend URL in browser.
+4. Register as Student, Faculty, and Admin (or use seeded demo users).
+5. Login with each role to verify role-based dashboard access.
+
+### B) Authentication Flow
+
+1. User opens Login or Register page.
+2. Backend validates credentials and returns JWT token.
+3. Frontend stores token in localStorage and attaches it automatically to future API requests.
+4. User is redirected to role home page:
+  - Student -> Student Dashboard
+  - Faculty -> Faculty Dashboard
+  - Admin -> Admin Dashboard
+5. If token expires or becomes invalid, user is logged out and asked to login again.
+
+### C) Student Journey Flow
+
+1. Student adds internship details with offer letter upload.
+2. Internship is created with default status Pending.
+3. Student tracks internship status in dashboard table.
+4. Student submits weekly reports with optional attachments.
+5. Student receives mentor feedback updates on reports.
+6. Student uploads completion certificate at the end of internship.
+7. Student keeps profile and resume updated.
+
+### D) Faculty Journey Flow
+
+1. Faculty opens Review Center.
+2. Faculty views pending internships.
+3. Faculty approves or rejects each internship.
+4. Faculty opens student report history for an internship.
+5. Faculty writes feedback and marks reports reviewed.
+
+### E) Admin Journey Flow
+
+1. Admin views platform statistics and charts.
+2. Admin creates, updates, and deletes users.
+3. Admin assigns mentors to students.
+4. Admin monitors overall internship lifecycle and user activity.
+
+### F) System Data Flow Summary
+
+1. Frontend submits form data (JSON or multipart for files).
+2. Backend validates request and role permissions.
+3. Mongoose models persist records in MongoDB.
+4. Uploaded files are stored in backend/uploads.
+5. Backend returns normalized response objects.
+6. Frontend updates UI state, shows notifications/toasts, and refreshes role views.
+
+### G) Quick End-to-End Demo Scenario
+
+1. Login as student and submit internship.
+2. Login as faculty and approve internship.
+3. Login as student and submit week-1 report.
+4. Login as faculty and add feedback.
+5. Login as student and verify feedback appears.
+6. Login as student and upload certificate.
+7. Login as admin and verify stats/users are visible.
+
+---
+
 ## API Reference
 
 Base URL: `http://localhost:5000/api`

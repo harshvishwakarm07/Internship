@@ -70,11 +70,18 @@ const getReportsByInternship = asyncHandler(async (req, res) => {
   }
 
   const isStudent = req.user.role === 'student';
+  const isFaculty = req.user.role === 'faculty';
   const isOwner = internship.student.toString() === req.user._id.toString();
+  const isAssignedFaculty = internship.mentor && internship.mentor.toString() === req.user._id.toString();
 
   if (isStudent && !isOwner) {
     res.status(403);
     throw new Error('Not authorized to view these reports');
+  }
+
+  if (isFaculty && !isAssignedFaculty) {
+    res.status(403);
+    throw new Error('Not authorized to view reports for this internship');
   }
 
   const query = { internship: req.params.internshipId };
@@ -94,6 +101,15 @@ const updateReportFeedback = asyncHandler(async (req, res) => {
   if (!report) {
     res.status(404);
     throw new Error('Report not found');
+  }
+
+  if (req.user.role === 'faculty') {
+    const internship = await Internship.findById(report.internship).select('mentor');
+    const isAssignedFaculty = internship && internship.mentor && internship.mentor.toString() === req.user._id.toString();
+    if (!isAssignedFaculty) {
+      res.status(403);
+      throw new Error('Not authorized to review this report');
+    }
   }
 
   report.feedback = feedback || report.feedback;
