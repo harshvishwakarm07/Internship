@@ -1,0 +1,13 @@
+flowchart LR
+  Student[Student] -->|Internship data, reports, profile updates| SITS[SITS System]
+  Faculty[Faculty] -->|Review decisions, report feedback| SITS
+  Admin[Admin] -->|User mgmt, mentor assignment, monitoring| SITS
+
+  SITS -->|Status, feedback, notifications| Student
+  SITS -->|Pending reports, assigned students| Faculty
+  SITS -->|Analytics, audit insights| Admin
+
+  SITS <--> D1[(User Data Store)]
+  SITS <--> D2[(Internship Data Store)]
+  SITS <--> D3[(Report/Feedback Data Store)]
+  SITS <--> D4[(Audit Log Data Store)]

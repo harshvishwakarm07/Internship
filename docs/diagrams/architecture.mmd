@@ -1,0 +1,10 @@
+flowchart LR
+  U[Users: Student | Faculty | Admin] --> FE[Frontend: React + Vite]
+  FE -->|HTTPS + JWT| BE[Backend: Node.js + Express REST API]
+  BE --> MW[Middleware: Auth, RBAC, Validation, Upload]
+  MW --> CTRL[Controllers: Auth, Internship, Report, Admin, Profile]
+  CTRL --> DB[(MongoDB via Mongoose)]
+  CTRL --> FS[(Local Uploads Folder)]
+  CTRL --> AUD[(Audit Log Collection)]
+  DB --> NTF[Notification Polling Data Source]
+  NTF --> FE

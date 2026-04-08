@@ -1,0 +1,86 @@
+erDiagram
+  USER ||--o| STUDENTPROFILE : has
+  USER ||--o{ INTERNSHIP : submits
+  USER ||--o{ INTERNSHIP : mentors
+  USER ||--o{ REPORT : writes
+  USER ||--o{ FEEDBACK : gives
+  USER ||--o{ AUDITLOG : performs
+
+  INTERNSHIP ||--o{ REPORT : contains
+  REPORT ||--o{ FEEDBACK : receives
+
+  USER {
+    ObjectId _id PK
+    string name
+    string email UK
+    string password
+    string role
+    boolean isActive
+    date createdAt
+    date updatedAt
+  }
+
+  STUDENTPROFILE {
+    ObjectId _id PK
+    ObjectId user FK
+    string enrollmentNo
+    string department
+    int semester
+    string phone
+    string resumePath
+    string linkedinUrl
+    string githubUrl
+  }
+
+  INTERNSHIP {
+    ObjectId _id PK
+    ObjectId student FK
+    string companyName
+    string role
+    date startDate
+    date endDate
+    string offerLetter
+    string certificate
+    string status
+    ObjectId mentor FK
+    ObjectId statusUpdatedBy FK
+    date statusUpdatedAt
+    string rejectionReason
+  }
+
+  REPORT {
+    ObjectId _id PK
+    ObjectId internship FK
+    ObjectId student FK
+    int weekNumber
+    string content
+    string attachment
+    date submissionDate
+    string status
+    string feedback
+    ObjectId reviewedBy FK
+    date reviewedAt
+  }
+
+  FEEDBACK {
+    ObjectId _id PK
+    ObjectId report FK
+    ObjectId internship FK
+    ObjectId student FK
+    ObjectId faculty FK
+    string comment
+    int rating
+  }
+
+  AUDITLOG {
+    ObjectId _id PK
+    ObjectId actor FK
+    string actorRole
+    string action
+    string entityType
+    string entityId
+    mixed metadata
+    string ipAddress
+    string userAgent
+    date createdAt
+  }
