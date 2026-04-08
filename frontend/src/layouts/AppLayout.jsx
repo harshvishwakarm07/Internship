@@ -17,11 +17,11 @@ export default function AppLayout({ children }) {
   }
 
   return (
-    <div className="futuristic-shell flex min-h-screen">
+    <div className="futuristic-shell flex h-screen overflow-hidden">
       <Sidebar />
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <Navbar />
-        <main className="flex-1 p-4 md:p-6">
+        <main className="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-6">
           <div className="mx-auto w-full max-w-7xl">{children}</div>
         </main>
       </div>

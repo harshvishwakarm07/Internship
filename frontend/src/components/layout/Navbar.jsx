@@ -29,7 +29,7 @@ export default function Navbar() {
   const links = user ? roleLinks[user.role] || [] : [];
 
   return (
-    <header className="sticky top-0 z-30 border-b border-white/30 bg-white/50 px-4 py-3 backdrop-blur-xl md:px-6 md:py-4 dark:border-slate-700/80 dark:bg-slate-900/55">
+    <header className="shrink-0 z-30 border-b border-white/30 bg-white/50 px-4 py-3 backdrop-blur-xl md:px-6 md:py-4 dark:border-slate-700/80 dark:bg-slate-900/55">
       <div className="flex items-center justify-between">
       <Link to={user ? `/${user.role}` : '/login'} className="inline-flex items-center gap-2 text-lg font-semibold text-slate-900 dark:text-slate-100">
         <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-cyan-400 to-teal-400 text-slate-950 shadow-[0_0_0_2px_rgba(255,255,255,0.35)]"><Sparkles size={14} /></span>

@@ -11,12 +11,12 @@ export default function Sidebar() {
   const navClass = ({ isActive }) => `inline-flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sm transition ${isActive ? 'bg-gradient-to-r from-cyan-500/80 to-teal-500/70 text-white shadow-[0_8px_24px_-12px_rgba(6,182,212,0.9)]' : 'text-slate-200 hover:bg-white/10 hover:text-white'}`;
 
   return (
-    <aside className="sticky top-0 hidden h-screen w-64 border-r border-slate-700/80 bg-slate-950/70 text-white backdrop-blur-xl md:block dark:border-slate-700/80 dark:bg-slate-950/75">
+    <aside className="hidden h-full w-64 shrink-0 border-r border-slate-700/80 bg-slate-950/70 text-white backdrop-blur-xl md:flex md:flex-col dark:border-slate-700/80 dark:bg-slate-950/75">
       <div className="border-b border-slate-800/80 px-4 py-4 dark:border-slate-700/80">
         <p className="text-xs uppercase tracking-[0.18em] text-cyan-300/80">Student Internship Tracking</p>
         <p className="text-sm font-semibold text-white">{user.role.toUpperCase()} PANEL</p>
       </div>
-      <nav className="space-y-2 p-3">
+      <nav className="flex-1 space-y-2 overflow-y-auto p-3">
         {user.role === 'student' && (
           <>
             <NavLink className={navClass} to="/student">
