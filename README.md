@@ -1,52 +1,81 @@
-# Student Internship Tracking System (SITS)
+﻿
 
-A complete, production-style MERN application for tracking student internships with role-based access, document uploads, report review workflows, analytics dashboards, dark/light theming, and audit logging.
+# SITS — Student Internship Tracking System
 
-## Overview
+A full-stack MERN application for academic institutions to manage student internship workflows — from submission to approval, weekly reporting, mentor feedback, and completion certification.
 
-SITS is designed for academic institutions to manage internship workflows from submission to approval and reporting.
+Built with a futuristic glassmorphism UI featuring dark/light theming, animated transitions, role-scoped notifications, and full form validation.
 
-Core capabilities:
+---
 
-- JWT-based authentication with secure password hashing
-- Role-based access control (Student, Faculty, Admin)
-- Internship lifecycle management (`Pending -> Approved -> Rejected`)
-- Local file uploads via Multer (`/backend/uploads`)
-- Weekly report submission and mentor feedback
-- Admin analytics, user management, mentor assignment
-- Dashboard charts (Recharts)
-- Basic notification panel for status updates
-- Dark/light mode with persisted preference
-- Integration tests with role-based API assertions
-- Audit trail logging for critical actions
+## Demo Credentials
+
+| Role    | Email                     | Password   |
+|---------|---------------------------|------------|
+| Admin   | demo.admin@sits.local     | Pass@1234  |
+| Faculty | demo.faculty@sits.local   | Pass@1234  |
+| Student | demo.student1@sits.local  | Pass@1234  |
+| Student | demo.student2@sits.local  | Pass@1234  |
+| Company | demo.company@sits.local   | Pass@1234  |
+
+> To seed demo data: `cd backend && node seedDemoData.js`
 
 ---
 
 ## Tech Stack
 
-### Frontend
+| Layer     | Technology                                     |
+|-----------|------------------------------------------------|
+| Frontend  | React 18 + Vite, Tailwind CSS, Framer Motion   |
+| Auth      | JWT + bcryptjs                                 |
+| API       | Node.js + Express                              |
+| Database  | MongoDB + Mongoose                             |
+| Uploads   | Multer (local disk)                            |
+| Charts    | Recharts                                       |
+| Testing   | Jest + Supertest + mongodb-memory-server       |
+| Validation| express-validator (backend), custom (frontend) |
 
-- React (Vite)
-- Tailwind CSS
-- React Router
-- Axios
-- Recharts
-- Framer Motion
-- Context API
+---
 
-### Backend
+## Features
 
-- Node.js + Express
-- MongoDB + Mongoose
-- JWT + bcryptjs
-- Multer (local disk storage)
-- express-validator
+### Role-Based Access Control
 
-### Testing
+- **Student** — submit internships, upload offer letter/certificate, submit weekly reports, manage profile
+- **Faculty** — review and approve/reject only their **assigned students'** internships, provide report feedback
+- **Admin** — manage all users, assign mentors, view analytics, audit logs
 
-- Jest
-- Supertest
-- mongodb-memory-server
+### UI / UX
+
+- Futuristic glassmorphism design — `backdrop-blur`, neon cyan/teal gradient palette
+- Custom thin cyan→teal scrollbar (6px)
+- Sidebar and navbar fixed in place; only main content area scrolls
+- Animated page transitions (Framer Motion)
+- Dark/light mode persisted in localStorage
+
+### Form Validation
+
+Every form has both **client-side** (inline field errors) and **server-side** (express-validator) validation:
+
+| Form             | Validated Fields                                                               |
+|------------------|--------------------------------------------------------------------------------|
+| Register         | Name (min 2), email format, password (min 6), confirm password match           |
+| Login            | Email format, password not empty                                               |
+| Add Internship   | Company (min 2), role (min 2), end date > start date, file type + size ≤ 5 MB |
+| Submit Report    | Week number (1–52), content (min 10 chars), file type + size ≤ 5 MB           |
+| Faculty Feedback | Feedback text (min 3 chars)                                                    |
+| Reject Reason    | Rejection reason required, min 3 chars                                         |
+| Profile          | Phone format, semester (1–12), LinkedIn/GitHub valid URLs                      |
+
+### Scoped Notifications
+
+Notifications are per-user and role-scoped (stored in localStorage keyed by `sits-notifications-{userId}`):
+
+- **Student** — internship status change (Approved/Rejected) + new mentor feedback on any report
+- **Faculty** — new pending submissions + new reports from **assigned students only** (API filters `{ mentor: req.user._id }`)
+- **Admin** — all platform-wide pending submissions
+
+Polling interval: 45 seconds.
 
 ---
 
@@ -54,88 +83,76 @@ Core capabilities:
 
 ```text
 InternShip/
-  backend/
-    app.js
-    server.js
-    package.json
-    config/
-      db.js
-    models/
-      User.js
-      StudentProfile.js
-      Internship.js
-      Report.js
-      Feedback.js
-      AuditLog.js
-    controllers/
-      authController.js
-      internshipController.js
-      reportController.js
-      adminController.js
-      profileController.js
-    routes/
-      authRoutes.js
-      internshipRoutes.js
-      reportRoutes.js
-      adminRoutes.js
-      userRoutes.js
-      facultyRoutes.js
-      profileRoutes.js
-    middleware/
-      authMiddleware.js
-      errorMiddleware.js
-      uploadMiddleware.js
-      validateObjectId.js
-      requestValidation.js
-    utils/
-      generateToken.js
-      validators.js
-      audit.js
-    tests/
-      setup.js
-      integration/
-        rbac.integration.test.js
-    uploads/
-
-  frontend/
-    package.json
-    postcss.config.cjs
-    tailwind.config.cjs
-    src/
-      App.jsx
-      main.jsx
-      index.css
-      context/
-        AuthContext.jsx
-        ThemeContext.jsx
-        NotificationContext.jsx
-      services/
-        api.js
-      routes/
-        AppRoutes.jsx
-        ProtectedRoute.jsx
-      layouts/
-        AppLayout.jsx
-      components/
-        common/
-          AnimatedPage.jsx
-          NotificationsPanel.jsx
-        dashboard/
-          AnalyticsCharts.jsx
-        layout/
-          Navbar.jsx
-          Sidebar.jsx
-      pages/
-        Login.jsx
-        Register.jsx
-        StudentDashboard.jsx
-        FacultyDashboard.jsx
-        AdminDashboard.jsx
-        AddInternship.jsx
-        ReportsPage.jsx
-        ProfilePage.jsx
-        Unauthorized.jsx
-        NotFound.jsx
+├── backend/
+│   ├── app.js
+│   ├── server.js
+│   ├── seedDemoData.js
+│   ├── cleanupQaData.js
+│   ├── config/db.js
+│   ├── models/
+│   │   ├── User.js
+│   │   ├── StudentProfile.js
+│   │   ├── Internship.js
+│   │   ├── Report.js
+│   │   ├── Feedback.js
+│   │   └── AuditLog.js
+│   ├── controllers/
+│   │   ├── authController.js
+│   │   ├── internshipController.js
+│   │   ├── reportController.js
+│   │   ├── adminController.js
+│   │   └── profileController.js
+│   ├── routes/
+│   │   ├── authRoutes.js
+│   │   ├── internshipRoutes.js
+│   │   ├── reportRoutes.js
+│   │   ├── adminRoutes.js
+│   │   ├── userRoutes.js
+│   │   ├── facultyRoutes.js
+│   │   └── profileRoutes.js
+│   ├── middleware/
+│   │   ├── authMiddleware.js
+│   │   ├── errorMiddleware.js
+│   │   ├── uploadMiddleware.js
+│   │   ├── validateObjectId.js
+│   │   └── requestValidation.js
+│   ├── utils/
+│   │   ├── generateToken.js
+│   │   ├── validators.js
+│   │   └── audit.js
+│   ├── tests/
+│   │   ├── setup.js
+│   │   └── integration/rbac.integration.test.js
+│   └── uploads/
+└── frontend/
+    ├── tailwind.config.cjs
+    └── src/
+	   ├── index.css
+	   ├── context/
+	   │   ├── AuthContext.jsx
+	   │   ├── ThemeContext.jsx
+	   │   └── NotificationContext.jsx
+	   ├── services/api.js
+	   ├── layouts/AppLayout.jsx
+	   ├── components/
+	   │   ├── common/
+	   │   │   ├── AnimatedPage.jsx
+	   │   │   └── NotificationsPanel.jsx
+	   │   ├── dashboard/AnalyticsCharts.jsx
+	   │   └── layout/
+	   │       ├── Navbar.jsx
+	   │       └── Sidebar.jsx
+	   └── pages/
+		  ├── Login.jsx
+		  ├── Register.jsx
+		  ├── StudentDashboard.jsx
+		  ├── FacultyDashboard.jsx
+		  ├── AdminDashboard.jsx
+		  ├── AddInternship.jsx
+		  ├── ReportsPage.jsx
+		  ├── ProfilePage.jsx
+		  ├── Unauthorized.jsx
+		  └── NotFound.jsx
 ```
 
 ---
@@ -144,131 +161,59 @@ InternShip/
 
 ### Student
 
-Can:
-
-- Register/login
-- Create internship with offer letter upload
-- View own internships
-- Upload completion certificate
-- Submit weekly reports with attachment
-- View own report history and feedback
-- Manage own profile and resume
-
-Cannot:
-
-- Access admin routes
-- Approve/reject internships
-- View other students' data
+| Can | Cannot |
+|-----|--------|
+| Register and login | Access admin or faculty routes |
+| Submit internship + offer letter | Approve/reject internships |
+| View own internships and status | View other students' data |
+| Upload completion certificate | |
+| Submit weekly reports with attachments | |
+| View own report history and mentor feedback | |
+| Manage profile and resume | |
 
 ### Faculty
 
-Can:
+| Can | Cannot |
+|-----|--------|
+| Login and access Faculty Review Center | Access admin user CRUD |
+| View only their assigned students' internships | View or act on unassigned students |
+| Approve or reject internships (rejection reason required) | Delete users |
+| View reports for assigned students only | |
+| Provide feedback on reports (min 3 chars) | |
 
-- Login and access faculty dashboard
-- View internship submissions
-- Approve/reject internships
-- View student reports
-- Provide report feedback
-
-Cannot:
-
-- Perform admin user CRUD
-- Delete users
+> Faculty mentor assignment is done by Admin via `PUT /api/admin/assign-mentor/:studentId`.
+> The `Internship.mentor` field stores the assigned faculty `_id`.
 
 ### Admin
 
-Can:
-
-- Manage users (create, list, update, delete)
-- Assign mentors
-- View system stats/analytics
-- Access all management routes
-
-Cannot:
-
-- Delete own account (safety guard)
+| Can | Cannot |
+|-----|--------|
+| View all users, internships, and stats | Delete their own account |
+| Create, update, delete users | |
+| Assign faculty mentors to students | |
+| Access analytics charts and audit logs | |
 
 ---
 
-## Workflow
+## Internship Lifecycle
 
-1. Student registers/logs in.
-2. Student submits internship + offer letter.
-3. Internship status starts as `Pending`.
-4. Faculty/Admin approves or rejects.
-5. Student submits weekly reports.
-6. Faculty/Admin reviews and adds feedback.
-7. Student uploads completion certificate.
-8. Admin monitors users and overall statistics.
-
----
-
-## Working Flow (Easy Guide)
-
-This section explains how the system works in one continuous flow so new developers, reviewers, and users can quickly understand the project.
-
-### A) First Run Flow (Developer)
-
-1. Start backend server.
-2. Start frontend app.
-3. Open the frontend URL in browser.
-4. Register as Student, Faculty, and Admin (or use seeded demo users).
-5. Login with each role to verify role-based dashboard access.
-
-### B) Authentication Flow
-
-1. User opens Login or Register page.
-2. Backend validates credentials and returns JWT token.
-3. Frontend stores token in localStorage and attaches it automatically to future API requests.
-4. User is redirected to role home page:
-  - Student -> Student Dashboard
-  - Faculty -> Faculty Dashboard
-  - Admin -> Admin Dashboard
-5. If token expires or becomes invalid, user is logged out and asked to login again.
-
-### C) Student Journey Flow
-
-1. Student adds internship details with offer letter upload.
-2. Internship is created with default status Pending.
-3. Student tracks internship status in dashboard table.
-4. Student submits weekly reports with optional attachments.
-5. Student receives mentor feedback updates on reports.
-6. Student uploads completion certificate at the end of internship.
-7. Student keeps profile and resume updated.
-
-### D) Faculty Journey Flow
-
-1. Faculty opens Review Center.
-2. Faculty views pending internships.
-3. Faculty approves or rejects each internship.
-4. Faculty opens student report history for an internship.
-5. Faculty writes feedback and marks reports reviewed.
-
-### E) Admin Journey Flow
-
-1. Admin views platform statistics and charts.
-2. Admin creates, updates, and deletes users.
-3. Admin assigns mentors to students.
-4. Admin monitors overall internship lifecycle and user activity.
-
-### F) System Data Flow Summary
-
-1. Frontend submits form data (JSON or multipart for files).
-2. Backend validates request and role permissions.
-3. Mongoose models persist records in MongoDB.
-4. Uploaded files are stored in backend/uploads.
-5. Backend returns normalized response objects.
-6. Frontend updates UI state, shows notifications/toasts, and refreshes role views.
-
-### G) Quick End-to-End Demo Scenario
-
-1. Login as student and submit internship.
-2. Login as faculty and approve internship.
-3. Login as student and submit week-1 report.
-4. Login as faculty and add feedback.
-5. Login as student and verify feedback appears.
-6. Login as student and upload certificate.
-7. Login as admin and verify stats/users are visible.
+```
+Student submits
+	↓
+  Pending
+	↓
+Admin assigns Faculty Mentor
+	↓
+Faculty Reviews
+	├─ Approves → Student submits weekly Reports
+	│                      ↓
+	│             Faculty provides Feedback
+	│                      ↓
+	│             Student uploads Certificate
+	└─ Rejects (reason required)
+		↓
+	Student sees rejection reason in dashboard
+```
 
 ---
 
@@ -278,595 +223,373 @@ Base URL: `http://localhost:5000/api`
 
 ### Auth
 
-- `POST /auth/register`
-- `POST /auth/login`
+| Method | Endpoint       | Access | Description        |
+|--------|----------------|--------|--------------------|
+| POST   | /auth/register | Public | Register user      |
+| POST   | /auth/login    | Public | Login, returns JWT |
 
-### Internship
+### Internships
 
-- `POST /internships` (student)
-- `GET /internships` (authenticated)
-- `GET /internships/my` (student)
-- `GET /internships/all` (faculty/admin)
-- `PUT /internships/:id/status` (faculty/admin)
-- `PUT /internships/:id/approve` (faculty/admin)
-- `PUT /internships/:id/reject` (faculty/admin)
-- `PUT /internships/:id/certificate` (student)
+| Method | Endpoint                     | Access        | Description                           |
+|--------|------------------------------|---------------|---------------------------------------|
+| POST   | /internships                 | Student       | Create internship + offer letter      |
+| GET    | /internships                 | Student       | Get own internships                   |
+| GET    | /internships/my              | Student       | Get own internships (alias)           |
+| GET    | /internships/all             | Faculty/Admin | Get all (faculty: assigned only)      |
+| PUT    | /internships/:id/status      | Faculty/Admin | Approve or Reject with status field   |
+| PUT    | /internships/:id/approve     | Faculty/Admin | Approve shorthand                     |
+| PUT    | /internships/:id/reject      | Faculty/Admin | Reject (rejectionReason required)     |
+| PUT    | /internships/:id/certificate | Student       | Upload completion certificate         |
 
 ### Reports
 
-- `POST /reports` (student)
-- `GET /reports/:internshipId` (role/ownership restricted)
-- `PUT /reports/:reportId/feedback` (faculty/admin)
-
-### Faculty
-
-- `GET /students` (faculty/admin)
+| Method | Endpoint                    | Access        | Description                                  |
+|--------|-----------------------------|---------------|----------------------------------------------|
+| POST   | /reports                    | Student       | Submit weekly report + attachment            |
+| GET    | /reports/:internshipId      | Role-scoped   | Student: own only; Faculty: assigned only    |
+| PUT    | /reports/:reportId/feedback | Faculty/Admin | Add feedback + mark Reviewed                 |
 
 ### Admin
 
-- `GET /admin/users`
-- `POST /admin/users`
-- `PUT /admin/users/:id`
-- `DELETE /admin/users/:id`
-- `PUT /admin/assign-mentor/:studentId`
-- `GET /admin/stats`
-
-### User Management Alias (Admin)
-
-- `GET /users`
-- `POST /users`
-- `DELETE /users/:id`
+| Method | Endpoint                        | Access | Description          |
+|--------|---------------------------------|--------|----------------------|
+| GET    | /admin/users                    | Admin  | List all users       |
+| POST   | /admin/users                    | Admin  | Create user          |
+| PUT    | /admin/users/:id                | Admin  | Update user          |
+| DELETE | /admin/users/:id                | Admin  | Delete user          |
+| PUT    | /admin/assign-mentor/:studentId | Admin  | Assign faculty mentor|
+| GET    | /admin/stats                    | Admin  | Platform statistics  |
 
 ### Profile
 
-- `GET /profile` (student)
-- `PUT /profile` (student, resume upload)
+| Method | Endpoint | Access  | Description                    |
+|--------|----------|---------|--------------------------------|
+| GET    | /profile | Student | Get student profile            |
+| PUT    | /profile | Student | Update profile + resume upload |
+
+### Faculty
+
+| Method | Endpoint  | Access        | Description                 |
+|--------|-----------|---------------|-----------------------------|
+| GET    | /students | Faculty/Admin | List students with profiles |
 
 ---
 
 ## API Examples
 
-Base URL used in examples:
-
-`http://localhost:5000/api`
-
-### 1) Register User
-
-Request:
+### Register
 
 ```http
 POST /api/auth/register
 Content-Type: application/json
 
-{
-  "name": "Aarav Student",
-  "email": "aarav.student@test.local",
-  "password": "Pass@1234",
-  "role": "student"
-}
+{ "name": "Aarav", "email": "aarav@test.local", "password": "Pass@1234", "role": "student" }
 ```
 
-Response (201):
-
-```json
-{
-  "_id": "67f0b0d8d6d9a4f0d2f09111",
-  "name": "Aarav Student",
-  "email": "aarav.student@test.local",
-  "role": "student",
-  "token": "<jwt_token>"
-}
-```
-
-### 2) Login
-
-Request:
-
-```http
-POST /api/auth/login
-Content-Type: application/json
-
-{
-  "email": "aarav.student@test.local",
-  "password": "Pass@1234"
-}
-```
-
-Response (200):
-
-```json
-{
-  "_id": "67f0b0d8d6d9a4f0d2f09111",
-  "name": "Aarav Student",
-  "email": "aarav.student@test.local",
-  "role": "student",
-  "token": "<jwt_token>"
-}
-```
-
-### 3) Create Internship (Student + File Upload)
-
-Request (multipart form-data):
+### Submit Internship
 
 ```bash
 curl -X POST http://localhost:5000/api/internships \
   -H "Authorization: Bearer <student_token>" \
-  -F "companyName=Acme Corp" \
-  -F "role=Frontend Intern" \
-  -F "startDate=2026-04-01" \
-  -F "endDate=2026-09-30" \
-  -F "offerLetter=@C:/files/offer_letter.pdf"
+  -F "companyName=Acme Corp" -F "role=Frontend Intern" \
+  -F "startDate=2026-04-01" -F "endDate=2026-09-30" \
+  -F "offerLetter=@offer.pdf"
 ```
 
-Response (201):
-
-```json
-{
-  "_id": "67f0b226d6d9a4f0d2f09140",
-  "student": "67f0b0d8d6d9a4f0d2f09111",
-  "companyName": "Acme Corp",
-  "role": "Frontend Intern",
-  "status": "Pending",
-  "offerLetter": "/uploads/offerLetter-1743421001201.pdf"
-}
-```
-
-### 4) Approve Internship (Faculty/Admin)
-
-Request:
+### Approve Internship
 
 ```http
-PUT /api/internships/67f0b226d6d9a4f0d2f09140/approve
-Authorization: Bearer <faculty_or_admin_token>
-Content-Type: application/json
-
-{}
+PUT /api/internships/<id>/approve
+Authorization: Bearer <faculty_token>
 ```
 
-Response (200):
-
-```json
-{
-  "_id": "67f0b226d6d9a4f0d2f09140",
-  "status": "Approved",
-  "statusUpdatedBy": "67f0b11dd6d9a4f0d2f09122",
-  "statusUpdatedAt": "2026-03-31T12:00:00.000Z"
-}
-```
-
-### 5) Reject Internship (Faculty/Admin)
-
-Request:
+### Reject Internship
 
 ```http
-PUT /api/internships/67f0b226d6d9a4f0d2f09140/reject
-Authorization: Bearer <faculty_or_admin_token>
+PUT /api/internships/<id>/reject
+Authorization: Bearer <faculty_token>
 Content-Type: application/json
 
-{
-  "rejectionReason": "Offer letter details are incomplete"
-}
+{ "rejectionReason": "Offer letter details are incomplete." }
 ```
 
-Response (200):
-
-```json
-{
-  "_id": "67f0b226d6d9a4f0d2f09140",
-  "status": "Rejected",
-  "rejectionReason": "Offer letter details are incomplete"
-}
-```
-
-### 6) Submit Weekly Report (Student + Attachment)
+### Submit Report
 
 ```bash
 curl -X POST http://localhost:5000/api/reports \
   -H "Authorization: Bearer <student_token>" \
-  -F "internship=67f0b226d6d9a4f0d2f09140" \
-  -F "weekNumber=1" \
-  -F "content=Completed onboarding and task setup for week 1." \
-  -F "attachment=@C:/files/week1_report.pdf"
+  -F "internship=<id>" -F "weekNumber=1" \
+  -F "content=Completed onboarding and project setup." \
+  -F "attachment=@week1.pdf"
 ```
 
-### 7) Add Feedback (Faculty/Admin)
+### Add Feedback
 
 ```http
-PUT /api/reports/67f0b3d3d6d9a4f0d2f09166/feedback
-Authorization: Bearer <faculty_or_admin_token>
+PUT /api/reports/<reportId>/feedback
+Authorization: Bearer <faculty_token>
 Content-Type: application/json
 
-{
-  "feedback": "Good progress. Please improve documentation depth.",
-  "status": "Reviewed",
-  "rating": 4
-}
+{ "feedback": "Good progress. Improve documentation.", "status": "Reviewed", "rating": 4 }
 ```
 
-### 8) Common Error Responses
+### Assign Mentor (Admin)
 
-```json
-{
-  "message": "Validation failed: password must be at least 6 characters"
-}
-```
+```http
+PUT /api/admin/assign-mentor/<studentUserId>
+Authorization: Bearer <admin_token>
+Content-Type: application/json
 
-```json
-{
-  "message": "Not authorized, no token"
-}
-```
-
-```json
-{
-  "message": "User role student is not authorized to access this route"
-}
+{ "facultyId": "<facultyUserId>" }
 ```
 
 ---
 
-## Postman Collection Setup
+## Error Codes
 
-Ready-to-import files are included in this repository:
-
-- `docs/postman/SITS_Local.postman_collection.json`
-- `docs/postman/SITS_Local.postman_environment.json`
-
-### Step 1: Create Environment
-
-Option A (recommended): import `docs/postman/SITS_Local.postman_environment.json`.
-
-Option B: create environment manually as below.
-
-Create a Postman Environment named `SITS Local` with:
-
-- `baseUrl` = `http://localhost:5000/api`
-- `studentToken` = (empty initially)
-- `facultyToken` = (empty initially)
-- `adminToken` = (empty initially)
-- `internshipId` = (empty initially)
-- `reportId` = (empty initially)
-
-### Step 2: Build Collection Folders
-
-Option A (recommended): import `docs/postman/SITS_Local.postman_collection.json`.
-
-Option B: create requests manually as below.
-
-1. Auth
-2. Student
-3. Faculty
-4. Admin
-
-### Step 3: Add Requests
-
-Recommended minimum request list:
-
-- `POST {{baseUrl}}/auth/register`
-- `POST {{baseUrl}}/auth/login`
-- `POST {{baseUrl}}/internships`
-- `GET {{baseUrl}}/internships/my`
-- `POST {{baseUrl}}/reports`
-- `GET {{baseUrl}}/students`
-- `PUT {{baseUrl}}/internships/:id/approve`
-- `PUT {{baseUrl}}/internships/:id/reject`
-- `GET {{baseUrl}}/users`
-- `POST {{baseUrl}}/users`
-- `DELETE {{baseUrl}}/users/:id`
-
-### Step 4: Save Tokens Automatically
-
-In login request Tests tab:
-
-```javascript
-const jsonData = pm.response.json();
-if (jsonData.role === 'student') pm.environment.set('studentToken', jsonData.token);
-if (jsonData.role === 'faculty') pm.environment.set('facultyToken', jsonData.token);
-if (jsonData.role === 'admin') pm.environment.set('adminToken', jsonData.token);
-```
-
-### Step 5: Save Dynamic IDs
-
-In internship creation Tests tab:
-
-```javascript
-const jsonData = pm.response.json();
-pm.environment.set('internshipId', jsonData._id);
-```
-
-In report creation Tests tab:
-
-```javascript
-const jsonData = pm.response.json();
-pm.environment.set('reportId', jsonData._id);
-```
-
-### Step 6: Use Authorization Header
-
-Example header value:
-
-- `Authorization: Bearer {{studentToken}}`
-
-### Recommended Execution Order (Imported Collection)
-
-1. Register Student
-2. Register Faculty
-3. Register Admin
-4. Login Student
-5. Login Faculty
-6. Login Admin
-7. Create Internship (attach `offerLetter` file)
-8. Submit Report (attach `attachment` file)
-9. Assign Mentor
-10. Approve Internship or Reject Internship
-11. Add Report Feedback
-12. Get Users / Get Admin Stats
+| Code | Meaning                              |
+|------|--------------------------------------|
+| 400  | Validation error / bad request data  |
+| 401  | Missing or invalid JWT token         |
+| 403  | Role not authorized for this route   |
+| 404  | Resource not found                   |
+| 409  | Conflict (e.g. duplicate email)      |
+| 413  | Uploaded file too large (> 5 MB)     |
+| 415  | Unsupported file type                |
+| 500  | Internal server error                |
 
 ---
 
-## Quick-Start Flowchart
+## Environment Setup
 
-```mermaid
-flowchart TD
-  A[Start MongoDB Compass Local Server] --> B[Run Backend: npm run dev]
-  B --> C[Run Frontend: npm run dev]
-  C --> D[Register or Login]
-  D --> E{Role?}
-  E -->|Student| F[Submit Internship + Upload Offer Letter]
-  E -->|Faculty| G[Review Pending Internships]
-  E -->|Admin| H[Manage Users + Assign Mentors + Monitor Stats]
-  F --> I[Status Pending]
-  G --> J{Decision}
-  J -->|Approve| K[Status Approved]
-  J -->|Reject| L[Status Rejected + Reason]
-  K --> M[Student Submits Weekly Reports]
-  M --> N[Faculty Adds Feedback]
-  N --> O[Student Uploads Completion Certificate]
-  H --> P[Audit Logs + Analytics]
-```
-
----
-
-## Screenshots Checklist
-
-Add screenshots in a folder named `docs/screenshots` and reference them here.
-
-Recommended captures:
-
-1. Login page (light)
-2. Login page (dark)
-3. Student dashboard with internship table
-4. Student report submission form
-5. Faculty dashboard with pending approvals
-6. Faculty chart section
-7. Admin dashboard stats cards
-8. Admin chart section
-9. Users management table with search/filter
-10. Notifications panel open state
-11. Unauthorized page
-12. Not Found page
-
-Example markdown embed:
-
-```markdown
-![Student Dashboard](docs/screenshots/student-dashboard.png)
-```
-
----
-
-## Validation and Error Handling
-
-### Request Validation
-
-All critical write routes are validated with `express-validator`:
-
-- auth payloads
-- internship create/status
-- report create/feedback
-- admin user operations
-- profile updates
-
-### Error Model
-
-- `400` Validation / bad request
-- `401` Unauthorized (missing/invalid token)
-- `403` Forbidden (role denied)
-- `404` Not found
-- `409` Conflict (duplicate values)
-- `413` File too large
-- `415` Unsupported file type
-- `500` Server error
-
----
-
-## File Uploads (Local)
-
-Multer stores files in:
-
-- `backend/uploads/`
-
-Supported types:
-
-- `.pdf`
-- `.jpg`
-- `.jpeg`
-- `.png`
-
-File size limit:
-
-- 5 MB
-
-Saved paths in MongoDB are relative paths, for example:
-
-- `/uploads/offerLetter-1234567890.pdf`
-
----
-
-## Audit Logging
-
-Actions are logged to `AuditLog` for traceability.
-
-Logged events include:
-
-- register/login
-- internship creation/status changes/certificate upload
-- report submission/review
-- user create/update/delete
-- mentor assignment
-- profile updates
-
-Audit fields:
-
-- actor and actorRole
-- action
-- entityType and entityId
-- metadata
-- IP and user-agent
-- timestamps
-
----
-
-## Frontend Features
-
-### Route Protection
-
-`ProtectedRoute` and `PublicOnlyRoute` enforce role access and redirect behavior.
-
-### Dashboard UX
-
-- search/filter on internship and user lists
-- analytics charts on faculty/admin dashboards
-- animated page transitions
-- notifications for status/pending updates
-
-### Theming
-
-- dark/light mode toggle in navbar
-- persisted in localStorage (`sits-theme`)
-
----
-
-## Environment Configuration
-
-Create `backend/.env`:
+### Backend (`backend/.env`)
 
 ```env
 NODE_ENV=development
 PORT=5000
 MONGO_URI=mongodb://127.0.0.1:27017/sits
-JWT_SECRET=your_strong_secret_here
+JWT_SECRET=your_strong_secret_here_min_32_chars
 ALLOW_PUBLIC_ADMIN_REGISTER=false
 ```
 
-Optional frontend env (`frontend/.env`):
+> Set `ALLOW_PUBLIC_ADMIN_REGISTER=true` only for local QA — never in production.
+
+### Frontend (`frontend/.env`) — optional
 
 ```env
 VITE_API_BASE_URL=http://localhost:5000/api
+VITE_ASSET_BASE_URL=http://localhost:5000
 ```
 
 ---
 
-## Running Locally
+## Quick Start
 
-## 1) Install Dependencies
+### 1. Prerequisites
 
-Backend:
+- Node.js 18+
+- MongoDB running locally (default: `mongodb://127.0.0.1:27017/sits`)
+
+### 2. Install Dependencies
+
+```powershell
+cd backend ; npm install
+cd ../frontend ; npm install
+```
+
+### 3. Configure Environment
+
+Create `backend/.env` with values from the Environment Setup section above.
+
+### 4. Seed Demo Data (optional)
 
 ```powershell
 cd backend
-npm install
+node seedDemoData.js
 ```
 
-Frontend:
+### 5. Start Backend
 
 ```powershell
-cd ../frontend
-npm install
-```
-
-## 2) Start Backend
-
-```powershell
-cd ../backend
+cd backend
 npm run dev
+# Server running on http://localhost:5000
 ```
 
-## 3) Start Frontend
+### 6. Start Frontend
 
 ```powershell
-cd ../frontend
+cd frontend
 npm run dev
+# App running on http://localhost:5173
 ```
-
-Open the URL shown by Vite (usually `http://127.0.0.1:5173` or `http://127.0.0.1:5174`).
 
 ---
 
-## Testing
-
-Run backend integration tests:
+## Running Tests
 
 ```powershell
 cd backend
 npm test
 ```
 
-The integration suite validates:
+The integration test suite validates:
 
-- RBAC restrictions
-- admin user management
-- internship/report workflow
-- request validation failures
+- Student RBAC restrictions (cannot access faculty/admin routes)
+- Admin user management (create, update, delete)
+- Full internship → approve → report → feedback workflow
+- Unassigned faculty receives 403 on another faculty's student reports
+- Request validation rejections (bad email, short password, etc.)
+
+All tests must pass with exit code 0.
+
+---
+
+## File Uploads
+
+Files are stored in `backend/uploads/`.
+
+| Field       | Route                            | Allowed Types | Max Size |
+|-------------|----------------------------------|---------------|----------|
+| offerLetter | POST /internships                | PDF/JPG/PNG   | 5 MB     |
+| attachment  | POST /reports                    | PDF/JPG/PNG   | 5 MB     |
+| certificate | PUT /internships/:id/certificate | PDF/JPG/PNG   | 5 MB     |
+| resume      | PUT /profile                     | PDF/JPG/PNG   | 5 MB     |
+
+Paths stored in MongoDB as `/uploads/<filename>`.  
+Frontend retrieves with `getAssetUrl(path)` from `services/api.js`.
+
+---
+
+## Validation Reference
+
+### Backend (express-validator)
+
+| Route group   | Validated fields                                               |
+|---------------|----------------------------------------------------------------|
+| Auth          | name, email, password, role                                    |
+| Internship    | companyName, role, startDate, endDate, status, rejectionReason |
+| Report        | internship (MongoId), weekNumber (1–52), content (min 10)      |
+| Feedback      | feedback (min 3), status (enum), rating (1–5)                  |
+| Admin user    | name, email, password, role (create/update)                    |
+| Mentor assign | studentId and facultyId both valid MongoIds                    |
+| Profile       | phone length, semester range (1–12), URL format                |
+
+### Frontend (inline field errors)
+
+Each form shows per-field error messages and highlights the field in red before any API call is made.  
+File inputs are validated for MIME type and size client-side.
+
+---
+
+## Audit Logging
+
+Critical actions are persisted in the `AuditLog` collection:
+
+| Action                   | Triggered by                      |
+|--------------------------|-----------------------------------|
+| USER_REGISTER            | auth register                     |
+| USER_LOGIN               | auth login                        |
+| INTERNSHIP_CREATE        | student submits internship        |
+| INTERNSHIP_STATUS_UPDATE | faculty/admin approves or rejects |
+| INTERNSHIP_CERTIFICATE   | student uploads certificate       |
+| REPORT_SUBMIT            | student submits weekly report     |
+| REPORT_REVIEW            | faculty submits feedback          |
+| USER_CREATE              | admin creates user                |
+| USER_UPDATE              | admin updates user                |
+| USER_DELETE              | admin deletes user                |
+| MENTOR_ASSIGN            | admin assigns faculty mentor      |
+| PROFILE_UPDATE           | student updates profile           |
+
+Each log entry stores: actor, actorRole, action, entityType, entityId, metadata, IP, userAgent, timestamp.
+
+---
+
+## Workflow Guide
+
+### Authentication Flow
+
+1. User opens Login or Register page
+2. Backend validates credentials and returns JWT token
+3. Frontend stores token in localStorage and attaches it automatically to future API requests via Axios interceptor
+4. User is redirected to role dashboard (Student / Faculty / Admin)
+5. If token expires, user is automatic ally logged out
+
+### Student Journey
+
+1. Register and login
+2. Submit internship with offer letter → status = Pending
+3. Admin assigns a faculty mentor
+4. Track status in dashboard
+5. Once Approved: submit weekly reports
+6. Receive mentor feedback via notifications panel
+7. Upload completion certificate
+
+### Faculty Journey
+
+1. Login → Faculty Review Center
+2. See only assigned students' internships
+3. Approve or Reject (with reason)
+4. Open report history per internship
+5. Write feedback (min 3 chars) and mark reports Reviewed
+
+### Admin Journey
+
+1. Login → Admin Dashboard with charts
+2. Create/manage users
+3. Assign faculty mentors to students
+4. Monitor internship stats and audit logs
 
 ---
 
 ## Troubleshooting
 
-### `EADDRINUSE: port 5000 already in use`
-
-A previous backend process is still running.
-
-- Stop old process or change `PORT` in `.env`.
-
-### `Not Found - /api/internships/my`
-
-Usually caused by an outdated/stale backend process.
-
-- restart backend and verify new instance is on port 5000
-- test endpoint manually
+### Port 5000 already in use
 
 ```powershell
-curl.exe -i http://localhost:5000/api/internships/my
+netstat -ano | findstr :5000
+taskkill /PID <pid> /F
 ```
 
-Expected without token: `401 Not authorized, no token` (this confirms route exists).
+### MongoDB connection refused
 
-### Frontend starts on different port
+```powershell
+mongod --dbpath C:\data\db
+```
 
-If 5173 is busy, Vite auto-picks next port (for example 5174). Open the URL shown in terminal.
+### Faculty sees "No internships available"
+
+Admin must assign the faculty as mentor first:
+
+```http
+PUT /api/admin/assign-mentor/<studentUserId>
+Authorization: Bearer <admin_token>
+{ "facultyId": "<facultyUserId>" }
+```
+
+### 401 on every request
+
+Token expired. Clear localStorage and log in again.
+
+### QA scripts fail with 403 admin register
+
+```powershell
+$env:ALLOW_PUBLIC_ADMIN_REGISTER="true"; npm run dev
+```
 
 ---
 
 ## Security Notes
 
-- Keep `JWT_SECRET` private and strong.
-- Do not allow public admin registration in production.
-- Do not commit `.env` files.
-- Restrict upload mime types and size (already enforced).
-- Use HTTPS and secure cookies in real deployments.
-
----
-
-## Suggested Next Improvements
-
-- Add pagination on large table endpoints
-- Add export/report download features
-- Add stricter faculty assignment scoping per internship
-- Add refresh token strategy
-- Add CI pipeline for tests and linting
+- Keep `JWT_SECRET` private, minimum 32 characters, randomly generated
+- Never set `ALLOW_PUBLIC_ADMIN_REGISTER=true` in production
+- Never commit `.env` files (add to `.gitignore`)
+- File MIME types and size are enforced server-side regardless of frontend validation
+- In production: use HTTPS, a reverse proxy (nginx), and rate limiting
 
 ---
 
 ## License
 
-For academic/project use. Add your preferred license before production distribution.
+For academic/project use. See your institution's guidelines before redistributing.
+

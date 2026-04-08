@@ -45,30 +45,86 @@ export function NotificationProvider({ children }) {
     const poll = async () => {
       try {
         if (user.role === 'student') {
-          const { data } = await api.get('/internships/my');
-          const snapshotKey = `sits-status-snapshot-${user._id}`;
-          const previousRaw = localStorage.getItem(snapshotKey);
-          const previous = previousRaw ? JSON.parse(previousRaw) : {};
-          const current = {};
+          // ── Student: status changes + new feedback on reports ──────────
+          const { data: internshipsData } = await api.get('/internships/my');
 
-          data.forEach((item) => {
-            current[item._id] = item.status;
-            if (previous[item._id] && previous[item._id] !== item.status) {
-              addNotification(`Internship at ${item.companyName} changed to ${item.status}.`);
+          // 1) Check internship status changes
+          const statusKey = `sits-status-snapshot-${user._id}`;
+          const prevStatus = JSON.parse(localStorage.getItem(statusKey) || '{}');
+          const currStatus = {};
+          internshipsData.forEach((item) => {
+            currStatus[item._id] = item.status;
+            if (prevStatus[item._id] && prevStatus[item._id] !== item.status) {
+              const label = item.status === 'Approved' ? '✅ Approved' : item.status === 'Rejected' ? '❌ Rejected' : item.status;
+              addNotification(`Your internship at ${item.companyName} was ${label}.`);
             }
           });
+          localStorage.setItem(statusKey, JSON.stringify(currStatus));
 
-          localStorage.setItem(snapshotKey, JSON.stringify(current));
+          // 2) Check for new feedback on submitted reports (per internship)
+          for (const internship of internshipsData) {
+            try {
+              const { data: reportsData } = await api.get(`/reports/${internship._id}`);
+              const fbKey = `sits-report-fb-${user._id}-${internship._id}`;
+              const prevFb = JSON.parse(localStorage.getItem(fbKey) || '{}');
+              const currFb = {};
+              reportsData.forEach((r) => {
+                currFb[r._id] = { status: r.status, feedback: r.feedback || '' };
+                const prev = prevFb[r._id];
+                if (prev) {
+                  if (!prev.feedback && r.feedback) {
+                    addNotification(`📝 New mentor feedback on your Week ${r.weekNumber} report at ${internship.companyName}.`);
+                  } else if (prev.status !== r.status && r.status === 'Reviewed') {
+                    addNotification(`✔ Your Week ${r.weekNumber} report at ${internship.companyName} was reviewed.`);
+                  }
+                }
+              });
+              localStorage.setItem(fbKey, JSON.stringify(currFb));
+            } catch (_) { /* best-effort per internship */ }
+          }
           return;
         }
 
-        if (user.role === 'faculty' || user.role === 'admin') {
-          const { data } = await api.get('/internships/all');
-          const pending = data.filter((item) => item.status === 'Pending').length;
+        if (user.role === 'faculty') {
+          // ── Faculty: scoped to their assigned students only (API filter) ──
+          const { data: internshipsData } = await api.get('/internships/all');
+
+          // 1) New pending internship submissions from assigned students
+          const pending = internshipsData.filter((i) => i.status === 'Pending').length;
           const pendingKey = `sits-pending-count-${user._id}`;
-          const previousPending = Number(localStorage.getItem(pendingKey) || '0');
-          if (pending > previousPending) {
-            addNotification(`${pending - previousPending} new internship submission(s) pending review.`);
+          const prevPending = Number(localStorage.getItem(pendingKey) || '0');
+          if (pending > prevPending) {
+            addNotification(`📋 ${pending - prevPending} new internship submission(s) from your assigned student(s) pending review.`);
+          }
+          localStorage.setItem(pendingKey, String(pending));
+
+          // 2) New reports submitted by assigned students
+          const reportCountKey = `sits-report-count-${user._id}`;
+          const prevCounts = JSON.parse(localStorage.getItem(reportCountKey) || '{}');
+          const currCounts = {};
+          for (const internship of internshipsData) {
+            try {
+              const { data: reportsData } = await api.get(`/reports/${internship._id}`);
+              currCounts[internship._id] = reportsData.length;
+              if (prevCounts[internship._id] !== undefined && reportsData.length > prevCounts[internship._id]) {
+                const diff = reportsData.length - prevCounts[internship._id];
+                const studentName = internship.student?.name || 'A student';
+                addNotification(`📄 ${studentName} submitted ${diff} new report(s) for ${internship.companyName}.`);
+              }
+            } catch (_) { /* best-effort per internship */ }
+          }
+          localStorage.setItem(reportCountKey, JSON.stringify(currCounts));
+          return;
+        }
+
+        if (user.role === 'admin') {
+          // ── Admin: all pending internships ─────────────────────────────
+          const { data: internshipsData } = await api.get('/internships/all');
+          const pending = internshipsData.filter((i) => i.status === 'Pending').length;
+          const pendingKey = `sits-pending-count-${user._id}`;
+          const prevPending = Number(localStorage.getItem(pendingKey) || '0');
+          if (pending > prevPending) {
+            addNotification(`📋 ${pending - prevPending} new internship submission(s) pending review.`);
           }
           localStorage.setItem(pendingKey, String(pending));
         }

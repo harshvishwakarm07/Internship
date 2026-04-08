@@ -11,11 +11,15 @@ const emptyProfile = {
   githubUrl: '',
 };
 
+const PHONE_RE = /^\+?[\d\s\-()\\.]{7,20}$/;
+const URL_RE = /^https?:\/\/.+/;
+
 export default function ProfilePage() {
   const [profile, setProfile] = useState(emptyProfile);
   const [resume, setResume] = useState(null);
   const [resumePath, setResumePath] = useState('');
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({});
   const [success, setSuccess] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -45,12 +49,27 @@ export default function ProfilePage() {
 
   const onChange = (field) => (event) => {
     setProfile((current) => ({ ...current, [field]: event.target.value }));
+    setFieldErrors((curr) => ({ ...curr, [field]: '' }));
+  };
+
+  const validate = () => {
+    const errs = {};
+    if (profile.phone && !PHONE_RE.test(profile.phone)) errs.phone = 'Enter a valid phone number.';
+    if (profile.semester && (Number(profile.semester) < 1 || Number(profile.semester) > 12))
+      errs.semester = 'Semester must be between 1 and 12.';
+    if (profile.linkedinUrl && !URL_RE.test(profile.linkedinUrl))
+      errs.linkedinUrl = 'Must start with http:// or https://';
+    if (profile.githubUrl && !URL_RE.test(profile.githubUrl))
+      errs.githubUrl = 'Must start with http:// or https://';
+    return errs;
   };
 
   const onSubmit = async (event) => {
     event.preventDefault();
     setError('');
     setSuccess('');
+    const errs = validate();
+    if (Object.keys(errs).length > 0) { setFieldErrors(errs); return; }
     setIsSaving(true);
 
     try {
@@ -107,22 +126,26 @@ export default function ProfilePage() {
 
             <div>
               <label className="field-label">Semester</label>
-              <input className="field-control" type="number" min="1" placeholder="Enter semester" value={profile.semester} onChange={onChange('semester')} />
+              <input className={`field-control ${fieldErrors.semester ? 'border-red-400 dark:border-red-500' : ''}`} type="number" min="1" max="12" placeholder="e.g. 4" value={profile.semester} onChange={onChange('semester')} />
+              {fieldErrors.semester && <p className="mt-1 text-xs text-red-500">{fieldErrors.semester}</p>}
             </div>
 
             <div>
               <label className="field-label">Phone</label>
-              <input className="field-control" placeholder="Enter phone number" value={profile.phone} onChange={onChange('phone')} />
+              <input className={`field-control ${fieldErrors.phone ? 'border-red-400 dark:border-red-500' : ''}`} placeholder="e.g. +91 9876543210" value={profile.phone} onChange={onChange('phone')} />
+              {fieldErrors.phone && <p className="mt-1 text-xs text-red-500">{fieldErrors.phone}</p>}
             </div>
 
             <div className="md:col-span-2">
               <label className="field-label">LinkedIn URL</label>
-              <input className="field-control" placeholder="https://linkedin.com/in/your-profile" value={profile.linkedinUrl} onChange={onChange('linkedinUrl')} />
+              <input className={`field-control ${fieldErrors.linkedinUrl ? 'border-red-400 dark:border-red-500' : ''}`} placeholder="https://linkedin.com/in/your-profile" value={profile.linkedinUrl} onChange={onChange('linkedinUrl')} />
+              {fieldErrors.linkedinUrl && <p className="mt-1 text-xs text-red-500">{fieldErrors.linkedinUrl}</p>}
             </div>
 
             <div className="md:col-span-2">
               <label className="field-label">GitHub URL</label>
-              <input className="field-control" placeholder="https://github.com/your-username" value={profile.githubUrl} onChange={onChange('githubUrl')} />
+              <input className={`field-control ${fieldErrors.githubUrl ? 'border-red-400 dark:border-red-500' : ''}`} placeholder="https://github.com/your-username" value={profile.githubUrl} onChange={onChange('githubUrl')} />
+              {fieldErrors.githubUrl && <p className="mt-1 text-xs text-red-500">{fieldErrors.githubUrl}</p>}
             </div>
 
             <div className="md:col-span-2 rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-900/60">
@@ -140,7 +163,7 @@ export default function ProfilePage() {
               )}
             </div>
 
-            <button className="md:col-span-2 rounded bg-blue-600 py-3 font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300" disabled={isSaving} type="submit">
+            <button className="md:col-span-2 neon-button rounded-xl py-3 font-semibold disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200" disabled={isSaving} type="submit">
               {isSaving ? 'Saving...' : 'Save Profile'}
             </button>
           </form>

@@ -10,15 +10,27 @@ export default function Login() {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({});
   const [error, setError] = useState('');
 
   if (user) {
     return <Navigate to={resolveHome(user)} replace />;
   }
 
+  const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  const validate = () => {
+    const errs = {};
+    if (!emailRe.test(email)) errs.email = 'Enter a valid email address.';
+    if (!password) errs.password = 'Password is required.';
+    return errs;
+  };
+
   const onSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    const errs = validate();
+    if (Object.keys(errs).length > 0) { setFieldErrors(errs); return; }
     try {
       const loggedIn = await login(email, password);
       navigate(resolveHome(loggedIn), { replace: true });
@@ -36,9 +48,17 @@ export default function Login() {
         <p className="text-sm text-slate-600 dark:text-slate-300">Sign in to continue to SITS control center</p>
       </div>
       <form onSubmit={onSubmit} className="space-y-3">
-        <input className="field-control" type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-        <input className="field-control" type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-        {error && <p className="text-sm text-red-600">{error}</p>}
+        <div>
+          <input className={`field-control ${fieldErrors.email ? 'border-red-400 dark:border-red-500' : ''}`} type="email" placeholder="Email" value={email}
+            onChange={(e) => { setEmail(e.target.value); setFieldErrors((c) => ({ ...c, email: '' })); }} />
+          {fieldErrors.email && <p className="mt-1 text-xs text-red-500">{fieldErrors.email}</p>}
+        </div>
+        <div>
+          <input className={`field-control ${fieldErrors.password ? 'border-red-400 dark:border-red-500' : ''}`} type="password" placeholder="Password" value={password}
+            onChange={(e) => { setPassword(e.target.value); setFieldErrors((c) => ({ ...c, password: '' })); }} />
+          {fieldErrors.password && <p className="mt-1 text-xs text-red-500">{fieldErrors.password}</p>}
+        </div>
+        {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
         <button disabled={loading} className="neon-button inline-flex w-full items-center justify-center gap-2 rounded-xl p-2.5 font-medium disabled:cursor-not-allowed disabled:bg-blue-300" type="submit">
           {loading ? 'Logging in...' : 'Login'}
           {!loading && <ArrowRight size={16} />}
